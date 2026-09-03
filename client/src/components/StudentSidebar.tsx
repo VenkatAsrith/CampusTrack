@@ -66,7 +66,7 @@ const StudentSidebar: React.FC<SidebarProps> = ({ onClose, isCollapsed = false, 
             <div className="overflow-hidden min-w-0">
               <h1 className="font-extrabold text-white text-sm leading-tight tracking-tight truncate">CampusTrack</h1>
               <span className="text-[10px] text-[#A5B4FC] font-bold tracking-wider uppercase block truncate">
-                JNTUH UCE
+                JNTUH UCE SULTANPUR
               </span>
             </div>
           )}
