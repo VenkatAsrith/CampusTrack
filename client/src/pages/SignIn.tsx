@@ -161,13 +161,19 @@ const SignIn: React.FC = () => {
     } catch (err: any) {
       const serverMsg = err.response?.data?.message || '';
       const status = err.response?.status;
-
       const userNotFound = 
         status === 404 || 
         serverMsg.toLowerCase().includes("doesn't exist") || 
         serverMsg.toLowerCase().includes("not exist");
 
-      if (userNotFound) {
+      if (status === 429) {
+        setPopup({
+          isOpen: true,
+          type: 'error',
+          title: 'Too Many Failed Attempts',
+          message: serverMsg || 'Too many failed login attempts have been detected from your network. Please wait 15 minutes before attempting to log in again.',
+        });
+      } else if (userNotFound) {
         setPopup({
           isOpen: true,
           type: 'error',
