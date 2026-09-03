@@ -5,23 +5,36 @@ import { config } from './index';
 let mongod: MongoMemoryServer | null = null;
 
 export const connectDB = async (): Promise<void> => {
-  try {
-    let mongoUri = config.MONGODB_URI;
+  let mongoUri = config.MONGODB_URI;
 
-    if (!mongoUri) {
-      console.log('⚠️ No MONGODB_URI environment variable found.');
-      console.log('🚀 Initializing in-memory MongoDB Server for demo/testing...');
-      mongod = await MongoMemoryServer.create();
-      mongoUri = mongod.getUri();
-      console.log(`✅ In-memory MongoDB running at: ${mongoUri}`);
+  mongoose.set('strictQuery', true);
+
+  if (mongoUri) {
+    try {
+      console.log('📡 Connecting to configured MongoDB URI...');
+      await mongoose.connect(mongoUri, {
+        serverSelectionTimeoutMS: 5000,
+      });
+      console.log(`💚 MongoDB Connected: ${mongoose.connection.host}`);
+      return;
+    } catch (err: any) {
+      console.warn('⚠️ Could not connect to remote MongoDB Atlas:');
+      console.warn(`   Reason: ${err.message}`);
+      console.warn('💡 Tip: Make sure your current IP address is whitelisted (or 0.0.0.0/0) in MongoDB Atlas -> Network Access.');
+      console.warn('🔄 Falling back to in-memory MongoDB Server so the application continues to run seamlessly...');
     }
+  } else {
+    console.log('⚠️ No MONGODB_URI environment variable found.');
+  }
 
-    mongoose.set('strictQuery', true);
+  try {
+    console.log('🚀 Initializing in-memory MongoDB Server...');
+    mongod = await MongoMemoryServer.create();
+    mongoUri = mongod.getUri();
     await mongoose.connect(mongoUri);
-
-    console.log(`💚 MongoDB Connected: ${mongoose.connection.host}`);
+    console.log(`✅ In-memory MongoDB running and connected at: ${mongoUri}`);
   } catch (error) {
-    console.error('❌ Database connection error:', error);
+    console.error('❌ Critical database error starting in-memory MongoDB:', error);
     process.exit(1);
   }
 };

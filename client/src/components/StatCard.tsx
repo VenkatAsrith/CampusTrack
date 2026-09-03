@@ -13,27 +13,31 @@ interface StatCardProps {
 
 const StatCard: React.FC<StatCardProps> = ({ title, value, description, icon, trend }) => {
   return (
-    <div className="bg-slate-800/60 backdrop-blur-md border border-slate-700/50 rounded-xl p-5 hover:border-slate-600 transition-all duration-300 shadow-lg">
-      <div className="flex items-center justify-between">
+    <div className="bg-white hover-lift rounded-2xl p-5 shadow-sm hover:shadow-md relative overflow-hidden border border-[#E5E9F2] transition-all">
+      <div className="flex items-center justify-between relative z-10">
         <div>
-          <p className="text-slate-400 text-xs font-semibold uppercase tracking-wider">{title}</p>
-          <p className="text-3xl font-bold mt-2 text-white">{value}</p>
+          {/* Subtext / Metadata (~10-11px Regular) */}
+          <p className="text-[#6C757D] text-[11px] uppercase font-bold tracking-wider">{title}</p>
+          {/* Primary Metric (~20-24px Bold) */}
+          <p className="text-[24px] font-bold mt-1.5 text-[#1E1E1E] tracking-tight">{value}</p>
         </div>
-        <div className="p-3 bg-slate-700/50 rounded-lg text-brand-400">
+        {/* Accent / Active Elements: Royal Blue (#3B50DF) */}
+        <div className="p-3 bg-[#EEF2FF] border border-[#D9E1FC] rounded-xl text-[#3B50DF] shadow-sm">
           {icon}
         </div>
       </div>
+
       {(description || trend) && (
-        <div className="flex items-center mt-4 text-xs">
+        <div className="flex items-center mt-3 text-[11px]">
           {trend && (
-            <span className={`font-semibold mr-2 ${
-              trend.type === 'positive' ? 'text-emerald-400' :
-              trend.type === 'negative' ? 'text-rose-400' : 'text-slate-400'
+            <span className={`font-semibold mr-1.5 ${
+              trend.type === 'positive' ? 'text-emerald-600' :
+              trend.type === 'negative' ? 'text-rose-600' : 'text-[#6C757D]'
             }`}>
               {trend.value}
             </span>
           )}
-          {description && <span className="text-slate-400">{description}</span>}
+          {description && <span className="text-[#6C757D]">{description}</span>}
         </div>
       )}
     </div>

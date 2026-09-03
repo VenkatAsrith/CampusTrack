@@ -11,6 +11,7 @@ import { AppError } from '../utils/errors';
 import { catchAsync } from '../middlewares/error';
 import { AuthenticatedRequest } from '../types/express';
 import { updateProfileCompletion } from '../utils/profileCompletion';
+import { calculateCGPAFromSemesters } from '../utils/cgpaCalculator';
 import { AuditLog } from '../models/AuditLog';
 
 // Helper to log audit actions
@@ -45,7 +46,7 @@ export const getMyProfile = catchAsync(async (req: AuthenticatedRequest, res: Re
   });
 });
 
-// Update student profile details (Roll Number, Email cannot be modified by student)
+// Update student profile details (Roll Number, Email remain locked)
 export const updateMyProfile = catchAsync(async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
   if (!req.user || req.user.role !== 'student') {
     return next(new AppError('Unauthorized: Only students can modify their profile.', 403));
@@ -56,13 +57,27 @@ export const updateMyProfile = catchAsync(async (req: AuthenticatedRequest, res:
     return next(new AppError('Student profile not found.', 404));
   }
 
-  // Fields allowed to be updated by student
   const {
     fullName,
     phone,
-    section,
+    studentMobile,
+    studentId,
+    gender,
+    dob,
+    branch,
+    year,
     semester,
-    cgpa,
+    motherName,
+    motherMobile,
+    fatherGuardianName,
+    fatherGuardianMobile,
+    address,
+    academicQualification,
+    sscPercentage,
+    intermediatePercentage,
+    diplomaPercentage,
+    semesterResults,
+    numberOfBacklogs,
     profilePhoto,
     careerInterest,
     github,
@@ -71,16 +86,62 @@ export const updateMyProfile = catchAsync(async (req: AuthenticatedRequest, res:
     resumeLink,
   } = req.body;
 
-  // Perform updates (Roll number and Email remain locked)
+  // Basic Information
   if (fullName !== undefined) student.fullName = fullName;
   if (phone !== undefined) student.phone = phone;
-  if (section !== undefined) student.section = section;
+  if (studentMobile !== undefined) student.studentMobile = studentMobile;
+  if (!student.phone && student.studentMobile) student.phone = student.studentMobile;
+  if (studentId !== undefined) student.studentId = studentId;
+  if (gender !== undefined) student.gender = gender;
+  if (dob !== undefined) student.dob = dob ? new Date(dob) : undefined;
+  if (branch !== undefined) student.branch = branch;
+  if (year !== undefined) student.year = Number(year);
   if (semester !== undefined) student.semester = Number(semester);
-  if (cgpa !== undefined) student.cgpa = Number(cgpa);
+
+  // Parent / Guardian Information
+  if (motherName !== undefined) student.motherName = motherName;
+  if (motherMobile !== undefined) student.motherMobile = motherMobile;
+  if (fatherGuardianName !== undefined) student.fatherGuardianName = fatherGuardianName;
+  if (fatherGuardianMobile !== undefined) student.fatherGuardianMobile = fatherGuardianMobile;
+
+  // Address
+  if (address && typeof address === 'object') {
+    student.address = {
+      doorNo: address.doorNo !== undefined ? address.doorNo : (student.address?.doorNo || ''),
+      street: address.street !== undefined ? address.street : (student.address?.street || ''),
+      city: address.city !== undefined ? address.city : (student.address?.city || ''),
+      district: address.district !== undefined ? address.district : (student.address?.district || ''),
+      state: address.state !== undefined ? address.state : (student.address?.state || ''),
+      pincode: address.pincode !== undefined ? address.pincode : (student.address?.pincode || ''),
+    };
+  }
+
+  // Academic Information
+  if (academicQualification !== undefined) student.academicQualification = academicQualification;
+  if (sscPercentage !== undefined) student.sscPercentage = Number(sscPercentage);
+  if (intermediatePercentage !== undefined) student.intermediatePercentage = Number(intermediatePercentage);
+  if (diplomaPercentage !== undefined) student.diplomaPercentage = Number(diplomaPercentage);
+  if (numberOfBacklogs !== undefined) student.numberOfBacklogs = Math.max(0, Number(numberOfBacklogs));
+
+  // Dynamic Semester Results & Automatic CGPA Calculation
+  if (Array.isArray(semesterResults)) {
+    // Only accept semesters up to current semester, with valid percentage
+    student.semesterResults = semesterResults
+      .filter((s: any) => Number(s.semester) >= 1 && Number(s.semester) <= 8)
+      .map((s: any) => ({
+        semester: Number(s.semester),
+        percentage: Number(s.percentage),
+      })) as any;
+
+    // Auto-calculate Overall CGPA on server side
+    student.cgpa = calculateCGPAFromSemesters(student.semesterResults);
+  }
+
+  // Photo & Career Interest
   if (profilePhoto !== undefined) student.profilePhoto = profilePhoto;
   if (careerInterest !== undefined) student.careerInterest = careerInterest;
-  
-  // Social/Career links
+
+  // Social / Professional Links
   if (github !== undefined) student.github = github;
   if (linkedin !== undefined) student.linkedin = linkedin;
   if (portfolio !== undefined) student.portfolio = portfolio;
@@ -88,15 +149,15 @@ export const updateMyProfile = catchAsync(async (req: AuthenticatedRequest, res:
 
   await student.save();
 
-  // Recalculate profile completion weighted percentage
+  // Recalculate profile completion
   const newCompletion = await updateProfileCompletion(student._id.toString());
 
   // Log action
-  await logAction(req.user.id, student.fullName, 'Student Updated Profile', 'Student', student._id);
+  await logAction(req.user.id, student.fullName, 'Student Updated Profile & Academics', 'Student', student._id);
 
   res.status(200).json({
     status: 'success',
-    message: 'Profile updated successfully.',
+    message: 'Profile updated successfully. CGPA and completion scores recalculated.',
     data: student,
   });
 });

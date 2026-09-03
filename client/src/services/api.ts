@@ -29,8 +29,8 @@ api.interceptors.response.use(
       // Clear storage and redirect on unauthorized
       localStorage.removeItem('campustrack_token');
       localStorage.removeItem('campustrack_user');
-      if (!window.location.pathname.includes('/login')) {
-        window.location.href = '/login';
+      if (!window.location.pathname.includes('/login') && !window.location.pathname.includes('/signin')) {
+        window.location.href = '/signin';
       }
     }
     return Promise.reject(error);

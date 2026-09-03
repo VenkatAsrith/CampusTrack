@@ -4,15 +4,15 @@ import {
   CheckSquare, 
   Hourglass, 
   Award, 
-  Trophy, 
-  Briefcase,
-  FileCheck,
-  FolderOpen
+  Briefcase, 
+  Megaphone, 
+  GraduationCap, 
+  AlertTriangle 
 } from 'lucide-react';
 import { 
   BarChart, 
   Bar, 
-  Cell,
+  Cell, 
   XAxis, 
   YAxis, 
   CartesianGrid, 
@@ -24,7 +24,15 @@ import {
 import api from '../services/api';
 import StatCard from '../components/StatCard';
 
-const COLORS = ['#14b8a6', '#6366f1', '#f59e0b', '#ef4444', '#a855f7', '#ec4899'];
+// Modern Education palette colors for charts
+const EDU_CHART_COLORS = [
+  '#3B50DF', // Royal Blue
+  '#5B6EF5', // Slate Indigo
+  '#8194F8', // Soft Sky Blue
+  '#38BDF8', // Cyan Blue
+  '#10B981', // Emerald
+  '#F59E0B', // Amber
+];
 
 const AdminDashboard: React.FC = () => {
   const [stats, setStats] = useState<any>(null);
@@ -41,7 +49,7 @@ const AdminDashboard: React.FC = () => {
         setStats(statsRes.data.data);
         setChartData(analyticsRes.data.data);
       } catch (err) {
-        console.error('Failed to load admin stats', err);
+        console.error('Failed to load TPO stats', err);
       } finally {
         setLoading(false);
       }
@@ -51,96 +59,126 @@ const AdminDashboard: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-3">
-        <div className="h-10 w-10 border-4 border-indigo-650 border-t-transparent rounded-full animate-spin"></div>
-        <p className="text-slate-400 text-sm font-semibold">Loading administration dashboard...</p>
+      <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-3 select-none">
+        <div className="h-10 w-10 border-4 border-[#3B50DF] border-t-transparent rounded-full animate-spin"></div>
+        <p className="text-[#6C757D] text-sm font-semibold">Loading TPO analytics dashboard...</p>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 select-none">
+      {/* Main Header (~28–32px Extra Bold) */}
       <div>
-        <h1 className="text-2xl font-black text-white tracking-tight">Institutional Dashboard</h1>
-        <p className="text-slate-400 text-xs mt-1">Review student registry, verification pipelines, and analytical aggregates.</p>
+        <h1 className="text-[28px] sm:text-[32px] font-extrabold text-[#1E1E1E] tracking-tight leading-tight">
+          Training & Placement Officer (TPO) Dashboard
+        </h1>
+        {/* Secondary / Description (~12–14px Muted Gray) */}
+        <p className="text-[#6C757D] text-[13px] mt-1 font-normal">
+          Monitor student academic benchmarks, backlogs, verification queues, and recruitment drive pipelines.
+        </p>
       </div>
 
-      {/* Grid of stats */}
+      {/* Primary Row Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard 
           title="Total Students" 
           value={stats.totalStudents} 
           icon={<Users size={20} />} 
-          description="Enrolled in CSE batch"
+          description="Enrolled across all branches"
         />
         <StatCard 
-          title="Profiles Completed" 
-          value={stats.completedProfiles} 
-          icon={<FileCheck size={20} />} 
-          description="Weighted completion >= 80%"
+          title="Average CGPA" 
+          value={stats.averageCgpa ? stats.averageCgpa.toFixed(2) : '0.00'} 
+          icon={<GraduationCap size={20} />} 
+          description="College-wide academic average"
         />
+        <StatCard 
+          title="Zero Backlogs" 
+          value={stats.zeroBacklogsStudents ?? 0} 
+          icon={<CheckSquare size={20} />} 
+          description="Direct placement eligible"
+          trend={{ value: `${stats.zeroBacklogsStudents ?? 0} students`, type: 'positive' }}
+        />
+        <StatCard 
+          title="With Backlogs" 
+          value={stats.withBacklogsStudents ?? 0} 
+          icon={<AlertTriangle size={20} />} 
+          description="Requires academic intervention"
+          trend={{ value: `${stats.withBacklogsStudents ?? 0} students`, type: 'negative' }}
+        />
+      </div>
+
+      {/* Secondary Row Stats */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard 
           title="Awaiting Review" 
           value={stats.awaitingVerification} 
           icon={<Hourglass size={20} />} 
-          description="Records in verification queue"
-          trend={{ value: `${stats.awaitingVerification} records`, type: stats.awaitingVerification > 0 ? 'warning' : 'neutral' as any }}
+          description="Proofs pending verification"
+          trend={{ value: `${stats.awaitingVerification} pending`, type: stats.awaitingVerification > 0 ? 'negative' : 'neutral' }}
         />
         <StatCard 
           title="Verified Records" 
           value={stats.verifiedRecords} 
-          icon={<CheckSquare size={20} />} 
+          icon={<Award size={20} />} 
           description="Total approved achievements"
+        />
+        <StatCard 
+          title="Active Notices" 
+          value={stats.activeAnnouncementsCount ?? 0} 
+          icon={<Megaphone size={20} />} 
+          description="Published student notices"
+        />
+        <StatCard 
+          title="Upcoming Drives" 
+          value={stats.upcomingDrivesCount ?? 0} 
+          icon={<Briefcase size={20} />} 
+          description="Recruitment drives scheduled"
         />
       </div>
 
-      {/* Grid of Secondary stats */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 bg-slate-900/20 border border-slate-900 rounded-xl p-4">
-        <div className="text-center p-3 border-r border-slate-800/80">
-          <p className="text-slate-500 text-[10px] uppercase font-bold tracking-wider">Total Projects</p>
-          <p className="text-xl font-bold text-white mt-1.5 flex items-center justify-center">
-            <FolderOpen size={16} className="text-slate-500 mr-2" />
-            {stats.totalProjects}
-          </p>
+      {/* Tertiary Submodule Counts */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 bg-white border border-[#E5E9F2] rounded-2xl p-4 shadow-sm">
+        <div className="text-center p-3 border-r border-[#E5E9F2]">
+          <p className="text-[#6C757D] text-[11px] uppercase font-bold tracking-widest">Total Projects</p>
+          <p className="text-[22px] font-bold text-[#1E1E1E] mt-1">{stats.totalProjects}</p>
         </div>
-        <div className="text-center p-3 border-r border-slate-800/80">
-          <p className="text-slate-500 text-[10px] uppercase font-bold tracking-wider">Total Internships</p>
-          <p className="text-xl font-bold text-white mt-1.5 flex items-center justify-center">
-            <Briefcase size={16} className="text-slate-500 mr-2" />
-            {stats.totalInternships}
-          </p>
+        <div className="text-center p-3 border-r border-[#E5E9F2]">
+          <p className="text-[#6C757D] text-[11px] uppercase font-bold tracking-widest">Internships</p>
+          <p className="text-[22px] font-bold text-[#1E1E1E] mt-1">{stats.totalInternships}</p>
         </div>
-        <div className="text-center p-3 border-r border-slate-800/80">
-          <p className="text-slate-500 text-[10px] uppercase font-bold tracking-wider">Certifications</p>
-          <p className="text-xl font-bold text-white mt-1.5 flex items-center justify-center">
-            <Award size={16} className="text-slate-500 mr-2" />
-            {stats.totalCertifications}
-          </p>
+        <div className="text-center p-3 border-r border-[#E5E9F2]">
+          <p className="text-[#6C757D] text-[11px] uppercase font-bold tracking-widest">Certifications</p>
+          <p className="text-[22px] font-bold text-[#1E1E1E] mt-1">{stats.totalCertifications}</p>
         </div>
         <div className="text-center p-3">
-          <p className="text-slate-500 text-[10px] uppercase font-bold tracking-wider">Hackathons Participated</p>
-          <p className="text-xl font-bold text-white mt-1.5 flex items-center justify-center">
-            <Trophy size={16} className="text-slate-500 mr-2" />
-            {stats.totalHackathons}
-          </p>
+          <p className="text-[#6C757D] text-[11px] uppercase font-bold tracking-widest">Hackathons</p>
+          <p className="text-[22px] font-bold text-[#1E1E1E] mt-1">{stats.totalHackathons}</p>
         </div>
       </div>
 
-      {/* Recharts layout */}
+      {/* Analytics Charts Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* CGPA Distribution */}
-        <div className="bg-slate-900/40 border border-slate-800 rounded-2xl p-6 shadow-md">
-          <h3 className="text-sm font-bold text-white mb-4">CGPA Range Distribution</h3>
-          <div className="h-64">
+        {/* Chart 1: CGPA Distribution */}
+        <div className="bg-white rounded-2xl p-6 shadow-sm border border-[#E5E9F2]">
+          {/* Section Titles (~14–16px Semi-Bold) */}
+          <h3 className="text-[15px] font-semibold text-[#1E1E1E] mb-0.5">CGPA Distribution (All Branches)</h3>
+          {/* Subtext & Metadata (~10–11px Regular) */}
+          <p className="text-[#6C757D] text-[11px] mb-6">Student academic standing distribution</p>
+          <div className="h-64 w-full">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={chartData.cgpaDistribution} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" />
-                <XAxis dataKey="range" stroke="#64748b" fontSize={10} />
-                <YAxis stroke="#64748b" fontSize={10} />
-                <Tooltip contentStyle={{ backgroundColor: '#0f172a', borderColor: '#334155' }} />
-                <Bar dataKey="count" fill="#6366f1" radius={[4, 4, 0, 0]}>
-                  {chartData.cgpaDistribution.map((_entry: any, index: number) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+              <BarChart data={chartData?.cgpaDistribution || []}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#F1F5F9" />
+                <XAxis dataKey="range" stroke="#6C757D" opacity={0.8} tick={{ fontSize: 11 }} />
+                <YAxis stroke="#6C757D" opacity={0.8} tick={{ fontSize: 11 }} />
+                <Tooltip 
+                  contentStyle={{ backgroundColor: '#FFFFFF', borderColor: '#E2E8F0', borderRadius: '12px', color: '#1E1E1E', boxShadow: '0 4px 12px rgba(0,0,0,0.06)' }} 
+                  itemStyle={{ color: '#1E1E1E' }}
+                />
+                <Bar dataKey="count" fill="#3B50DF" radius={[8, 8, 0, 0]}>
+                  {(chartData?.cgpaDistribution || []).map((_: any, index: number) => (
+                    <Cell key={`cell-${index}`} fill={EDU_CHART_COLORS[index % EDU_CHART_COLORS.length]} />
                   ))}
                 </Bar>
               </BarChart>
@@ -148,63 +186,73 @@ const AdminDashboard: React.FC = () => {
           </div>
         </div>
 
-        {/* Coding platform participation */}
-        <div className="bg-slate-900/40 border border-slate-800 rounded-2xl p-6 shadow-md">
-          <h3 className="text-sm font-bold text-white mb-4">Coding Platforms Participation</h3>
-          <div className="h-64 flex flex-col md:flex-row items-center justify-center">
-            {chartData.codingPlatforms.length === 0 ? (
-              <p className="text-xs text-slate-550">No coding handles added yet.</p>
-            ) : (
-              <>
-                <div className="w-full md:w-1/2 h-full">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <PieChart>
-                      <Pie
-                        data={chartData.codingPlatforms}
-                        cx="50%"
-                        cy="50%"
-                        innerRadius={60}
-                        outerRadius={80}
-                        paddingAngle={5}
-                        dataKey="count"
-                        nameKey="platform"
-                      >
-                        {chartData.codingPlatforms.map((_entry: any, index: number) => (
-                          <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                        ))}
-                      </Pie>
-                      <Tooltip contentStyle={{ backgroundColor: '#0f172a', borderColor: '#334155' }} />
-                    </PieChart>
-                  </ResponsiveContainer>
-                </div>
-                <div className="w-full md:w-1/2 space-y-2 mt-4 md:mt-0 px-4">
-                  {chartData.codingPlatforms.map((entry: any, index: number) => (
-                    <div key={entry.platform} className="flex items-center justify-between text-xs">
-                      <div className="flex items-center space-x-2">
-                        <span className="h-2 w-2 rounded-full" style={{ backgroundColor: COLORS[index % COLORS.length] }} />
-                        <span className="text-slate-350">{entry.platform}</span>
-                      </div>
-                      <span className="font-semibold text-white">{entry.count} students</span>
-                    </div>
+        {/* Chart 2: Branch Breakdown */}
+        <div className="bg-white rounded-2xl p-6 shadow-sm border border-[#E5E9F2]">
+          <h3 className="text-[15px] font-semibold text-[#1E1E1E] mb-0.5">Student Enrollment by Branch</h3>
+          <p className="text-[#6C757D] text-[11px] mb-6">Branch-wise candidate pool</p>
+          <div className="h-64 w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={chartData?.branchDistribution || []} layout="vertical">
+                <CartesianGrid strokeDasharray="3 3" stroke="#F1F5F9" />
+                <XAxis type="number" stroke="#6C757D" opacity={0.8} tick={{ fontSize: 11 }} />
+                <YAxis dataKey="branch" type="category" stroke="#6C757D" opacity={0.9} tick={{ fontSize: 9 }} width={120} />
+                <Tooltip 
+                  contentStyle={{ backgroundColor: '#FFFFFF', borderColor: '#E2E8F0', borderRadius: '12px', color: '#1E1E1E', boxShadow: '0 4px 12px rgba(0,0,0,0.06)' }} 
+                />
+                <Bar dataKey="count" fill="#5B6EF5" radius={[0, 8, 8, 0]}>
+                  {(chartData?.branchDistribution || []).map((_: any, index: number) => (
+                    <Cell key={`cell-branch-${index}`} fill={EDU_CHART_COLORS[index % EDU_CHART_COLORS.length]} />
                   ))}
-                </div>
-              </>
-            )}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
           </div>
         </div>
 
-        {/* Certification Categories */}
-        <div className="bg-slate-900/40 border border-slate-800 rounded-2xl p-6 shadow-md lg:col-span-2">
-          <h3 className="text-sm font-bold text-white mb-4">Certificate Category Distribution</h3>
-          <div className="h-64">
+        {/* Chart 3: Coding Platforms */}
+        <div className="bg-white rounded-2xl p-6 shadow-sm border border-[#E5E9F2]">
+          <h3 className="text-[15px] font-semibold text-[#1E1E1E] mb-0.5">Competitive Coding Participation</h3>
+          <p className="text-[#6C757D] text-[11px] mb-6">Profiles connected by platform</p>
+          <div className="h-64 w-full">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={chartData.certCategories} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" />
-                <XAxis dataKey="category" stroke="#64748b" fontSize={10} />
-                <YAxis stroke="#64748b" fontSize={10} />
-                <Tooltip contentStyle={{ backgroundColor: '#0f172a', borderColor: '#334155' }} />
-                <Bar dataKey="count" fill="#14b8a6" radius={[4, 4, 0, 0]} />
+              <BarChart data={chartData?.codingPlatforms || []}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#F1F5F9" />
+                <XAxis dataKey="platform" stroke="#6C757D" opacity={0.8} tick={{ fontSize: 11 }} />
+                <YAxis stroke="#6C757D" opacity={0.8} tick={{ fontSize: 11 }} />
+                <Tooltip 
+                  contentStyle={{ backgroundColor: '#FFFFFF', borderColor: '#E2E8F0', borderRadius: '12px', color: '#1E1E1E', boxShadow: '0 4px 12px rgba(0,0,0,0.06)' }} 
+                />
+                <Bar dataKey="count" fill="#3B50DF" radius={[8, 8, 0, 0]} />
               </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+
+        {/* Chart 4: Verification Status Pie */}
+        <div className="bg-white rounded-2xl p-6 shadow-sm border border-[#E5E9F2]">
+          <h3 className="text-[15px] font-semibold text-[#1E1E1E] mb-0.5">Internship Verification Status</h3>
+          <p className="text-[#6C757D] text-[11px] mb-6">Verification audit breakdown</p>
+          <div className="h-64 w-full flex items-center justify-center">
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie
+                  data={chartData?.internshipStatus || []}
+                  dataKey="count"
+                  nameKey="status"
+                  cx="50%"
+                  cy="50%"
+                  outerRadius={85}
+                  innerRadius={45}
+                  label={({ status, count }) => `${status}: ${count}`}
+                >
+                  {(chartData?.internshipStatus || []).map((_: any, index: number) => (
+                    <Cell key={`cell-pie-${index}`} fill={EDU_CHART_COLORS[index % EDU_CHART_COLORS.length]} />
+                  ))}
+                </Pie>
+                <Tooltip 
+                  contentStyle={{ backgroundColor: '#FFFFFF', borderColor: '#E2E8F0', borderRadius: '12px', color: '#1E1E1E', boxShadow: '0 4px 12px rgba(0,0,0,0.06)' }} 
+                />
+              </PieChart>
             </ResponsiveContainer>
           </div>
         </div>

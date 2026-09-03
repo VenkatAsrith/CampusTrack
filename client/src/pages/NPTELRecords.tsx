@@ -144,8 +144,8 @@ const NPTELRecords: React.FC = () => {
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-3">
-        <div className="h-10 w-10 border-4 border-brand-500 border-t-transparent rounded-full animate-spin"></div>
-        <p className="text-slate-400 text-sm font-semibold">Loading NPTEL records...</p>
+        <div className="h-10 w-10 border-4 border-[#3B50DF] border-t-transparent rounded-full animate-spin"></div>
+        <p className="text-[#6C757D] text-sm font-semibold">Loading NPTEL records...</p>
       </div>
     );
   }
@@ -154,12 +154,12 @@ const NPTELRecords: React.FC = () => {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-xl font-bold text-white">NPTEL Courses</h1>
-          <p className="text-slate-400 text-xs mt-1">Submit SWAYAM/NPTEL online course examination records for verification.</p>
+          <h1 className="text-xl font-extrabold text-[#1E1E1E]">NPTEL Courses</h1>
+          <p className="text-[#6C757D] text-xs mt-1">Submit SWAYAM/NPTEL online course examination records for verification.</p>
         </div>
         <button
           onClick={openAddModal}
-          className="flex items-center px-4 py-2 text-xs font-bold bg-brand-500 hover:bg-brand-600 text-slate-955 rounded-xl shadow-lg transition-all active:scale-95"
+          className="flex items-center px-4 py-2 text-xs font-bold bg-[#3B50DF] hover:bg-[#2E3FB8] text-white shadow-sm rounded-xl shadow-lg transition-all active:scale-95"
         >
           <Plus size={16} className="mr-1" />
           Add Course
@@ -167,13 +167,13 @@ const NPTELRecords: React.FC = () => {
       </div>
 
       {records.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-20 text-center bg-slate-900/20 border border-dashed border-slate-800 rounded-2xl">
-          <BookOpen className="h-16 w-16 text-slate-700 mb-3 animate-pulse" />
-          <h3 className="text-base font-bold text-white">No NPTEL courses added yet</h3>
-          <p className="text-slate-550 text-xs mt-2 max-w-sm">Add SWAYAM NPTEL computer science courses to enhance your profile credentials.</p>
+        <div className="flex flex-col items-center justify-center py-16 text-center bg-white border border-dashed border-[#CBD5E1] rounded-2xl">
+          <BookOpen className="h-14 w-14 text-[#94A3B8] mb-3" />
+          <h3 className="text-base font-bold text-[#1E1E1E]">No NPTEL courses added yet</h3>
+          <p className="text-[#6C757D] text-xs mt-1.5 max-w-sm">Add SWAYAM NPTEL computer science courses to enhance your profile credentials.</p>
           <button
             onClick={openAddModal}
-            className="mt-4 flex items-center px-4 py-2 text-xs font-bold border border-slate-700 hover:border-slate-500 text-slate-300 rounded-xl transition-all"
+            className="mt-4 flex items-center px-4 py-2 text-xs font-bold bg-[#3B50DF] hover:bg-[#2E3FB8] text-white rounded-xl shadow-sm transition active:scale-95"
           >
             <PlusCircle size={14} className="mr-1.5" />
             Add course now
@@ -186,32 +186,32 @@ const NPTELRecords: React.FC = () => {
             return (
               <div 
                 key={r._id}
-                className="bg-slate-900/40 border border-slate-800 rounded-2xl p-6 hover:border-slate-750 transition-all flex flex-col justify-between shadow-md"
+                className="bg-white border border-[#E5E9F2] rounded-2xl shadow-sm hover:shadow-md p-6 hover:border-[#3B50DF]/40 transition-all flex flex-col justify-between"
               >
                 <div>
                   <div className="flex items-start justify-between gap-4">
                     <div>
-                      <span className="text-[10px] text-brand-400 font-extrabold uppercase tracking-wider bg-slate-950 px-2.5 py-1 border border-slate-850 rounded">
+                      <span className="text-[10px] text-[#3B50DF] font-extrabold uppercase tracking-wider bg-[#EEF2FF] px-2.5 py-1 border border-[#D9E1FC] rounded">
                         {r.certificationType}
                       </span>
-                      <h3 className="font-extrabold text-white text-lg mt-2 truncate max-w-xs">{r.courseName}</h3>
-                      <p className="text-slate-550 text-[10px] mt-1 font-semibold">{r.courseId}</p>
+                      <h3 className="font-extrabold text-[#1E1E1E] text-base mt-2 truncate max-w-xs">{r.courseName}</h3>
+                      <p className="text-[#6C757D] text-xs mt-0.5 font-semibold">{r.courseId}</p>
                     </div>
                     <StatusBadge status={r.verification.status} />
                   </div>
 
-                  <div className="mt-5 grid grid-cols-3 gap-2 bg-slate-950/40 border border-slate-850 rounded-xl p-3 text-center">
+                  <div className="mt-5 grid grid-cols-3 gap-2 bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl p-3 text-center">
                     <div>
-                      <span className="text-[10px] text-slate-500 uppercase font-bold tracking-wider">Score</span>
-                      <p className="text-sm font-bold text-white mt-1">{r.score}%</p>
+                      <span className="text-[10px] text-[#6C757D] uppercase font-bold tracking-wider">Score</span>
+                      <p className="text-sm font-bold text-[#1E1E1E] mt-1">{r.score}%</p>
                     </div>
                     <div>
-                      <span className="text-[10px] text-slate-500 uppercase font-bold tracking-wider">Elite</span>
-                      <p className="text-sm font-bold text-white mt-1">{r.eliteStatus ? 'Yes' : 'No'}</p>
+                      <span className="text-[10px] text-[#6C757D] uppercase font-bold tracking-wider">Elite</span>
+                      <p className="text-sm font-bold text-[#1E1E1E] mt-1">{r.eliteStatus ? 'Yes' : 'No'}</p>
                     </div>
                     <div>
-                      <span className="text-[10px] text-slate-500 uppercase font-bold tracking-wider">Rank</span>
-                      <p className="text-sm font-bold text-white mt-1">{r.rank || '-'}</p>
+                      <span className="text-[10px] text-[#6C757D] uppercase font-bold tracking-wider">Rank</span>
+                      <p className="text-sm font-bold text-[#1E1E1E] mt-1">{r.rank || '-'}</p>
                     </div>
                   </div>
 
@@ -230,7 +230,7 @@ const NPTELRecords: React.FC = () => {
                   )}
                 </div>
 
-                <div className="mt-6 pt-4 border-t border-slate-800/80 flex items-center justify-between">
+                <div className="mt-6 pt-4 border-t border-[#E5E9F2]/80 flex items-center justify-between">
                   <div className="flex space-x-3 text-xs">
                     {r.certificate && (
                       <a href={`/api/v1/documents/${r.certificate._id}`} target="_blank" rel="noopener noreferrer" className="text-brand-450 hover:text-brand-350 underline font-semibold">
@@ -251,13 +251,13 @@ const NPTELRecords: React.FC = () => {
                         </button>
                         <button
                           onClick={() => openEditModal(r)}
-                          className="p-1.5 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-colors border border-slate-800 hover:border-slate-700"
+                          className="p-1.5 text-[#6C757D] hover:text-white hover:bg-[#F4F6FA] rounded-lg transition-colors border border-[#E5E9F2] hover:border-[#3B50DF]"
                         >
                           <Edit2 size={12} />
                         </button>
                         <button
                           onClick={() => setDeleteId(r._id)}
-                          className="p-1.5 text-slate-400 hover:text-rose-450 hover:bg-rose-955/20 rounded-lg transition-colors border border-slate-800 hover:border-rose-900/30"
+                          className="p-1.5 text-[#6C757D] hover:text-rose-450 hover:bg-rose-955/20 rounded-lg transition-colors border border-[#E5E9F2] hover:border-rose-900/30"
                         >
                           <Trash2 size={12} />
                         </button>
@@ -273,48 +273,56 @@ const NPTELRecords: React.FC = () => {
 
       {/* Add/Edit Modal */}
       {modalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-slate-950/80 backdrop-blur-sm" onClick={() => setModalOpen(false)} />
-          <div className="relative bg-slate-900 border border-slate-800 rounded-2xl p-6 w-full max-w-lg shadow-2xl overflow-y-auto max-h-[90vh]">
-            <h3 className="text-lg font-bold text-white mb-4">
-              {editingRecord ? 'Edit Course details' : 'Add NPTEL Record'}
-            </h3>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#151B3B]/60 backdrop-blur-sm overflow-y-auto">
+          <div className="relative bg-white border border-[#E5E9F2] rounded-2xl p-6 w-full max-w-lg shadow-2xl overflow-y-auto max-h-[90vh] my-auto">
+            <div className="flex items-center justify-between pb-3 border-b border-[#E5E9F2] mb-4">
+              <h3 className="text-base font-extrabold text-[#1E1E1E]">
+                {editingRecord ? 'Edit Course Details' : 'Add NPTEL Record'}
+              </h3>
+              <button
+                type="button"
+                onClick={() => setModalOpen(false)}
+                className="h-8 w-8 rounded-lg flex items-center justify-center text-[#6C757D] hover:text-[#1E1E1E] hover:bg-[#F4F6FA] transition"
+              >
+                ✕
+              </button>
+            </div>
             
             <form onSubmit={handleSave} className="space-y-4">
               {formError && (
-                <div className="p-3 bg-rose-955/20 border border-rose-900/40 text-rose-455 rounded-xl text-xs font-semibold">
+                <div className="p-3 bg-rose-50 border border-rose-200 text-rose-800 rounded-xl text-xs font-semibold">
                   {formError}
                 </div>
               )}
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1.5">Course Name</label>
+                  <label className="block text-xs font-bold text-[#1E1E1E] uppercase tracking-wider mb-1">Course Name *</label>
                   <input
                     type="text"
                     required
                     value={courseName}
                     onChange={(e) => setCourseName(e.target.value)}
                     placeholder="e.g. Software Engineering"
-                    className="block w-full px-3.5 py-2.5 bg-slate-955 border border-slate-800 rounded-xl text-sm text-white focus:outline-none focus:ring-2 focus:ring-brand-500"
+                    className="block w-full px-3.5 py-2.5 bg-white border border-[#E2E8F0] rounded-xl text-xs text-[#1E1E1E] focus:outline-none focus:border-[#3B50DF] focus:ring-2 focus:ring-[#3B50DF]/15"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1.5">Course NOC ID</label>
+                  <label className="block text-xs font-bold text-[#1E1E1E] uppercase tracking-wider mb-1">Course NOC ID *</label>
                   <input
                     type="text"
                     required
                     value={courseId}
                     onChange={(e) => setCourseId(e.target.value)}
                     placeholder="e.g. noc24-cs10"
-                    className="block w-full px-3.5 py-2.5 bg-slate-955 border border-slate-800 rounded-xl text-sm text-white focus:outline-none focus:ring-2 focus:ring-brand-500"
+                    className="block w-full px-3.5 py-2.5 bg-white border border-[#E2E8F0] rounded-xl text-xs text-[#1E1E1E] focus:outline-none focus:border-[#3B50DF] focus:ring-2 focus:ring-[#3B50DF]/15"
                   />
                 </div>
               </div>
 
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div>
-                  <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1.5">Exam Score</label>
+                  <label className="block text-xs font-bold text-[#1E1E1E] uppercase tracking-wider mb-1">Exam Score *</label>
                   <input
                     type="number"
                     required
@@ -323,53 +331,53 @@ const NPTELRecords: React.FC = () => {
                     value={score}
                     onChange={(e) => setScore(e.target.value)}
                     placeholder="e.g. 85"
-                    className="block w-full px-3.5 py-2.5 bg-slate-955 border border-slate-800 rounded-xl text-sm text-white focus:outline-none focus:ring-2 focus:ring-brand-500"
+                    className="block w-full px-3.5 py-2.5 bg-white border border-[#E2E8F0] rounded-xl text-xs text-[#1E1E1E] focus:outline-none focus:border-[#3B50DF] focus:ring-2 focus:ring-[#3B50DF]/15"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1.5">Exam Rank</label>
+                  <label className="block text-xs font-bold text-[#1E1E1E] uppercase tracking-wider mb-1">Exam Rank</label>
                   <input
                     type="number"
                     value={rank}
                     onChange={(e) => setRank(e.target.value)}
                     placeholder="e.g. 15 (Optional)"
-                    className="block w-full px-3.5 py-2.5 bg-slate-955 border border-slate-800 rounded-xl text-sm text-white focus:outline-none focus:ring-2 focus:ring-brand-500"
+                    className="block w-full px-3.5 py-2.5 bg-white border border-[#E2E8F0] rounded-xl text-xs text-[#1E1E1E] focus:outline-none focus:border-[#3B50DF] focus:ring-2 focus:ring-[#3B50DF]/15"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1.5">Exam Date</label>
+                  <label className="block text-xs font-bold text-[#1E1E1E] uppercase tracking-wider mb-1">Exam Date *</label>
                   <input
                     type="date"
                     required
                     value={examDate}
                     onChange={(e) => setExamDate(e.target.value)}
-                    className="block w-full px-3.5 py-2.5 bg-slate-955 border border-slate-800 rounded-xl text-sm text-white focus:outline-none focus:ring-2 focus:ring-brand-500"
+                    className="block w-full px-3.5 py-2.5 bg-white border border-[#E2E8F0] rounded-xl text-xs text-[#1E1E1E] focus:outline-none focus:border-[#3B50DF] focus:ring-2 focus:ring-[#3B50DF]/15"
                   />
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1.5">Certification Type</label>
+                  <label className="block text-xs font-bold text-[#1E1E1E] uppercase tracking-wider mb-1">Certification Type *</label>
                   <select
                     value={certificationType}
                     onChange={(e) => setCertificationType(e.target.value as any)}
-                    className="block w-full px-3.5 py-2.5 bg-slate-955 border border-slate-800 rounded-xl text-sm text-white focus:outline-none focus:ring-2 focus:ring-brand-500"
+                    className="block w-full px-3.5 py-2.5 bg-white border border-[#E2E8F0] rounded-xl text-xs text-[#1E1E1E] focus:outline-none focus:border-[#3B50DF] focus:ring-2 focus:ring-[#3B50DF]/15"
                   >
                     {['Participation', 'Elite', 'Elite + Silver', 'Elite + Gold'].map(t => (
                       <option key={t} value={t}>{t}</option>
                     ))}
                   </select>
                 </div>
-                <div className="flex items-center space-x-2 pt-6 pl-2">
+                <div className="flex items-center space-x-2 pt-5">
                   <input
                     type="checkbox"
                     id="eliteStatus"
                     checked={eliteStatus}
                     onChange={(e) => setEliteStatus(e.target.checked)}
-                    className="h-4.5 w-4.5 rounded border-slate-800 bg-slate-950 text-brand-500 focus:ring-brand-500 focus:ring-offset-slate-900"
+                    className="h-4 w-4 rounded border-[#CBD5E1] text-[#3B50DF] focus:ring-[#3B50DF]"
                   />
-                  <label htmlFor="eliteStatus" className="text-xs text-slate-350 font-bold select-none cursor-pointer">
+                  <label htmlFor="eliteStatus" className="text-xs text-[#1E1E1E] font-semibold select-none cursor-pointer">
                     Elite Course status achieved
                   </label>
                 </div>
@@ -383,18 +391,18 @@ const NPTELRecords: React.FC = () => {
                 />
               </div>
 
-              <div className="mt-6 flex justify-end space-x-3 pt-3">
+              <div className="mt-6 flex justify-end space-x-3 pt-3 border-t border-[#E5E9F2]">
                 <button
                   type="button"
                   onClick={() => setModalOpen(false)}
-                  className="px-4 py-2 border border-slate-700 rounded-xl text-slate-355 text-sm font-semibold hover:bg-slate-800 transition-colors"
+                  className="px-4 py-2 border border-[#E2E8F0] bg-white rounded-xl text-[#6C757D] text-xs font-semibold hover:bg-[#F4F6FA] transition"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={saving}
-                  className="px-5 py-2 bg-brand-500 hover:bg-brand-600 disabled:opacity-50 text-slate-955 rounded-xl text-sm font-bold shadow-md flex items-center"
+                  className="px-5 py-2 bg-[#3B50DF] hover:bg-[#2E3FB8] disabled:opacity-50 text-white rounded-xl text-xs font-bold shadow-md shadow-[#3B50DF]/20 flex items-center transition active:scale-95"
                 >
                   {saving && <Loader2 className="animate-spin h-3.5 w-3.5 mr-1.5" />}
                   {editingRecord ? 'Save Changes' : 'Add Course'}

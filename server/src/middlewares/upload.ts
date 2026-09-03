@@ -23,17 +23,25 @@ const storage = multer.diskStorage({
   },
 });
 
-// File filter validation (PDF, JPG, JPEG, PNG only)
+// File filter validation (PDF, JPG, JPEG, PNG, WEBP, DOC, DOCX)
 const fileFilter = (req: Request, file: Express.Multer.File, cb: multer.FileFilterCallback) => {
-  const allowedExtensions = ['.pdf', '.jpg', '.jpeg', '.png'];
-  const allowedMimeTypes = ['application/pdf', 'image/jpeg', 'image/jpg', 'image/png'];
+  const allowedExtensions = ['.pdf', '.jpg', '.jpeg', '.png', '.webp', '.doc', '.docx'];
+  const allowedMimeTypes = [
+    'application/pdf', 
+    'image/jpeg', 
+    'image/jpg', 
+    'image/png', 
+    'image/webp',
+    'application/msword',
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+  ];
 
   const ext = path.extname(file.originalname).toLowerCase();
 
-  if (allowedExtensions.includes(ext) && allowedMimeTypes.includes(file.mimetype)) {
+  if (allowedExtensions.includes(ext) || allowedMimeTypes.includes(file.mimetype)) {
     cb(null, true);
   } else {
-    cb(new AppError('Only PDF, JPG, JPEG, and PNG files are supported.', 400) as any, false);
+    cb(new AppError('Only PDF, JPG, JPEG, PNG, DOC, and DOCX files are supported.', 400) as any, false);
   }
 };
 
@@ -41,6 +49,6 @@ export const upload = multer({
   storage: storage,
   fileFilter: fileFilter,
   limits: {
-    fileSize: 5 * 1024 * 1024, // 5MB limit
+    fileSize: 10 * 1024 * 1024, // 10MB limit
   },
 });

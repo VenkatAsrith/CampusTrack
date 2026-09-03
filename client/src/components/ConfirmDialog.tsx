@@ -22,55 +22,26 @@ const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
   onConfirm,
   onCancel,
   isLoading = false,
-  type = 'warning',
 }) => {
   if (!isOpen) return null;
-
-  const getTypeStyles = () => {
-    switch (type) {
-      case 'danger':
-        return {
-          bg: 'bg-rose-950/40',
-          border: 'border-rose-900/50',
-          text: 'text-rose-450',
-          button: 'bg-rose-600 hover:bg-rose-700 focus:ring-rose-500 text-white',
-        };
-      case 'info':
-        return {
-          bg: 'bg-blue-950/40',
-          border: 'border-blue-900/50',
-          text: 'text-blue-450',
-          button: 'bg-brand-500 hover:bg-brand-600 focus:ring-brand-500 text-slate-950',
-        };
-      default:
-        return {
-          bg: 'bg-yellow-950/40',
-          border: 'border-yellow-900/50',
-          text: 'text-yellow-450',
-          button: 'bg-yellow-600 hover:bg-yellow-700 focus:ring-yellow-500 text-white',
-        };
-    }
-  };
-
-  const styles = getTypeStyles();
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       {/* Overlay background */}
       <div 
-        className="absolute inset-0 bg-slate-950/80 backdrop-blur-sm transition-opacity" 
+        className="absolute inset-0 bg-[#151B3B]/60 backdrop-blur-sm transition-opacity" 
         onClick={onCancel}
       />
       
       {/* Dialog card */}
-      <div className={`relative bg-slate-900 border ${styles.border} rounded-2xl max-w-md w-full p-6 shadow-2xl transition-all scale-100`}>
+      <div className="relative bg-white border border-[#E5E9F2] rounded-2xl max-w-md w-full p-6 shadow-2xl transition-all scale-100">
         <div className="flex items-start">
-          <div className={`p-3 rounded-xl mr-4 ${styles.bg}`}>
-            <AlertTriangle className={`h-6 w-6 ${styles.text}`} />
+          <div className="p-3 rounded-xl mr-4 bg-[#EEF2FF] border border-[#D9E1FC] text-[#3B50DF]">
+            <AlertTriangle className="h-6 w-6 text-[#3B50DF]" />
           </div>
           <div>
-            <h3 className="text-lg font-bold text-white">{title}</h3>
-            <p className="text-sm text-slate-350 mt-2 leading-relaxed">{message}</p>
+            <h3 className="text-base font-extrabold text-[#1E1E1E]">{title}</h3>
+            <p className="text-xs text-[#6C757D] mt-2 leading-relaxed">{message}</p>
           </div>
         </div>
 
@@ -79,7 +50,7 @@ const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
             type="button"
             onClick={onCancel}
             disabled={isLoading}
-            className="px-4 py-2 border border-slate-700 rounded-xl text-slate-300 text-sm font-semibold hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-700 transition-colors disabled:opacity-50"
+            className="px-4 py-2 border border-[#E2E8F0] rounded-xl text-[#1E1E1E] text-xs font-semibold hover:bg-[#F4F6FA] focus:outline-none transition-colors disabled:opacity-50"
           >
             {cancelLabel}
           </button>
@@ -88,7 +59,7 @@ const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
             type="button"
             onClick={onConfirm}
             disabled={isLoading}
-            className={`px-4 py-2 rounded-xl text-sm font-semibold flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-slate-900 transition-colors disabled:opacity-50 ${styles.button}`}
+            className="px-5 py-2 rounded-xl text-xs font-bold flex items-center justify-center bg-[#3B50DF] hover:bg-[#2E3FB8] text-white shadow-md shadow-[#3B50DF]/20 transition-colors disabled:opacity-50"
           >
             {isLoading ? (
               <>

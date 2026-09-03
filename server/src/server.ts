@@ -16,10 +16,11 @@ const startServer = async () => {
   // Connect to DB
   await connectDB();
 
-  // Auto seed if empty
+  // Auto seed if empty or if requested student profile is missing
   const userCount = await User.countDocuments();
-  if (userCount === 0) {
-    console.log('🌱 Database is empty. Running auto-seeding...');
+  const demo23SS = await User.findOne({ rollNumber: '23SS1A0535' });
+  if (userCount === 0 || !demo23SS) {
+    console.log('🌱 Database needs initialization. Running auto-seeding with student 23SS1A0535 & demo profiles...');
     await seedData();
   }
 

@@ -15,14 +15,31 @@ import achievementRoutes from './routes/achievementRoutes';
 import documentRoutes from './routes/documentRoutes';
 import adminRoutes from './routes/adminRoutes';
 import exportRoutes from './routes/exportRoutes';
+import announcementRoutes from './routes/announcementRoutes';
+import syncRoutes from './routes/syncRoutes';
 import { config } from './config';
 
 const app = express();
 
 // Security Middlewares
 app.use(helmet());
+
+// Secure CORS configuration
+const allowedOrigins = [
+  'http://localhost:5173',
+  'http://127.0.0.1:5173',
+  config.CLIENT_URL,
+].filter(Boolean);
+
 app.use(cors({
-  origin: config.NODE_ENV === 'development' ? 'http://localhost:5173' : '*', // Allow client port
+  origin: (origin, callback) => {
+    // Allow requests with no origin (e.g. mobile apps, curl, server-to-server, Google Apps Script)
+    if (!origin || allowedOrigins.includes(origin) || config.NODE_ENV === 'development') {
+      callback(null, true);
+    } else {
+      callback(new Error('CORS policy: Origin not permitted'));
+    }
+  },
   credentials: true,
 }));
 
@@ -51,7 +68,9 @@ app.use('/api/v1/hackathons', hackathonRoutes);
 app.use('/api/v1/achievements', achievementRoutes);
 app.use('/api/v1/documents', documentRoutes);
 app.use('/api/v1/admin', adminRoutes);
+app.use('/api/v1/announcements', announcementRoutes);
 app.use('/api/v1/exports', exportRoutes);
+app.use('/api/v1/sync', syncRoutes);
 
 // Base route for connectivity check
 app.get('/api/v1/health', (req, res) => {

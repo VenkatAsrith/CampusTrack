@@ -13,11 +13,16 @@ export const uploadFile = catchAsync(async (req: AuthenticatedRequest, res: Resp
   }
 
   // Create Document record
+  const originalSize = req.body.originalSize ? Number(req.body.originalSize) : req.file.size;
+  const optimizedSize = req.body.optimizedSize ? Number(req.body.optimizedSize) : req.file.size;
+
   const document = await Document.create({
     filename: req.file.filename,
     originalName: req.file.originalname,
     mimeType: req.file.mimetype,
     size: req.file.size,
+    originalSize,
+    optimizedSize,
     filePath: req.file.path,
     uploadedBy: req.user!.id,
   });

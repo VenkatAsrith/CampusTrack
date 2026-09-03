@@ -5,18 +5,48 @@ export interface User {
   role: 'student' | 'admin';
 }
 
+export interface Address {
+  doorNo?: string;
+  street?: string;
+  city?: string;
+  district?: string;
+  state?: string;
+  pincode?: string;
+}
+
+export interface SemesterResult {
+  semester: number;
+  percentage: number;
+}
+
 export interface Student {
   _id: string;
   user: string;
   rollNumber: string;
+  studentId?: string;
   fullName: string;
   email: string;
   phone: string;
+  studentMobile?: string;
+  gender?: string;
+  dob?: string;
   branch: string;
-  section: string;
+  section?: string;
   batch: string;
-  cgpa: number;
+  year?: number;
   semester: number;
+  motherName?: string;
+  motherMobile?: string;
+  fatherGuardianName?: string;
+  fatherGuardianMobile?: string;
+  address?: Address;
+  academicQualification?: 'Intermediate' | 'Diploma' | '';
+  sscPercentage?: number;
+  intermediatePercentage?: number;
+  diplomaPercentage?: number;
+  semesterResults?: SemesterResult[];
+  numberOfBacklogs?: number;
+  cgpa: number;
   profilePhoto?: string;
   careerInterest: string;
   github?: string;
@@ -45,6 +75,47 @@ export interface Document {
   createdAt: string;
 }
 
+export interface AnnouncementLink {
+  label: string;
+  url: string;
+}
+
+export interface AnnouncementAttachment {
+  name: string;
+  fileUrl: string;
+  mimeType?: string;
+  size?: number;
+}
+
+export interface AnnouncementEligibility {
+  minCGPA?: number;
+  maxBacklogs?: number;
+  eligibleBranches?: string[];
+  eligibleYears?: number[];
+}
+
+export interface Announcement {
+  _id: string;
+  title: string;
+  description: string;
+  links?: AnnouncementLink[];
+  imageUrl?: string;
+  attachments?: AnnouncementAttachment[];
+  type: 'General' | 'Academic' | 'Placement' | 'Internship' | 'Drive' | 'Event' | 'Important';
+  isPlacementDrive: boolean;
+  companyName?: string;
+  jobRole?: string;
+  driveDate?: string;
+  startDate?: string;
+  endDate?: string;
+  eligibility?: AnnouncementEligibility;
+  isPublished: boolean;
+  status: 'UPCOMING' | 'ACTIVE' | 'EXPIRED';
+  createdBy?: any;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface CodingProfile {
   _id: string;
   student: string;
@@ -60,7 +131,7 @@ export interface CodingProfile {
 
 export interface Project {
   _id: string;
-  student: any; // populated or string ID
+  student: any;
   projectName: string;
   description: string;
   technologies: string[];

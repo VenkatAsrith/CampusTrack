@@ -16,39 +16,58 @@ export const calculateProfileCompletion = async (studentId: string): Promise<{ p
   let percentage = 0;
   const missing: string[] = [];
 
-  // 1. Basic Profile (20%) - Check if basic text info is filled
-  const hasBasic = student.fullName && student.email && student.phone && student.branch && student.section && student.batch;
+  // 1. Basic Profile (15%) - Name, Email, Phone/Mobile, Branch, Batch, Year, Semester (NO section required)
+  const hasBasic = !!(student.fullName && student.email && (student.studentMobile || student.phone) && student.branch && student.batch && student.year && student.semester);
   if (hasBasic) {
-    percentage += 20;
-  } else {
-    missing.push('Complete basic profile information (Name, Email, Phone, Branch, Section, Batch)');
-  }
-
-  // 2. Academic (15%) - CGPA and Semester filled
-  const hasAcademic = student.cgpa !== undefined && student.semester !== undefined;
-  if (hasAcademic) {
     percentage += 15;
   } else {
-    missing.push('Provide academic details (CGPA, Semester)');
+    missing.push('Complete basic profile information (Name, Email, Mobile, Branch, Batch, Year, Semester)');
   }
 
-  // 3. Career Links (5%) - GitHub, LinkedIn or Portfolio
-  const hasCareerLinks = !!(student.github || student.linkedin || student.portfolio);
+  // 2. Parent / Guardian Info (5%)
+  const hasParent = !!((student.motherName && student.motherMobile) || (student.fatherGuardianName && student.fatherGuardianMobile));
+  if (hasParent) {
+    percentage += 5;
+  } else {
+    missing.push('Add parent or guardian contact details');
+  }
+
+  // 3. Address Info (5%)
+  const hasAddress = !!(student.address && (student.address.city || student.address.district) && student.address.state);
+  if (hasAddress) {
+    percentage += 5;
+  } else {
+    missing.push('Provide permanent address details');
+  }
+
+  // 4. Academic Details (15%) - SSC, Inter/Diploma, and Semester results
+  const hasSchool = (student.sscPercentage || 0) > 0;
+  const hasPreUniv = (student.intermediatePercentage || 0) > 0 || (student.diplomaPercentage || 0) > 0;
+  const hasSemesters = Array.isArray(student.semesterResults) && student.semesterResults.length > 0;
+  
+  if (hasSchool && hasPreUniv && (student.semester <= 1 || hasSemesters)) {
+    percentage += 15;
+  } else {
+    missing.push('Complete academic information (SSC, Intermediate/Diploma %, Semester results)');
+  }
+
+  // 5. Career Links (5%) - GitHub, LinkedIn, Portfolio or Resume
+  const hasCareerLinks = !!(student.github || student.linkedin || student.portfolio || student.resumeLink);
   if (hasCareerLinks) {
     percentage += 5;
   } else {
-    missing.push('Add at least one professional link (GitHub, LinkedIn, or Portfolio)');
+    missing.push('Add at least one professional link (GitHub, LinkedIn, Portfolio, or Resume)');
   }
 
-  // 4. Coding Profiles (10%) - Has at least one coding profile
+  // 6. Coding Profiles (10%)
   const codingCount = await CodingProfile.countDocuments({ student: studentId });
   if (codingCount > 0) {
     percentage += 10;
   } else {
-    missing.push('Add at least one coding platform profile (LeetCode, HackerRank, etc.)');
+    missing.push('Add at least one competitive coding profile (LeetCode, CodeChef, etc.)');
   }
 
-  // 5. Projects (15%) - Has at least one project
+  // 7. Projects (15%)
   const projectCount = await Project.countDocuments({ student: studentId });
   if (projectCount > 0) {
     percentage += 15;
@@ -56,7 +75,7 @@ export const calculateProfileCompletion = async (studentId: string): Promise<{ p
     missing.push('Add at least one project to showcase your technical skills');
   }
 
-  // 6. Internships (10%) - Has at least one internship
+  // 8. Internships (10%)
   const internshipCount = await Internship.countDocuments({ student: studentId });
   if (internshipCount > 0) {
     percentage += 10;
@@ -64,7 +83,7 @@ export const calculateProfileCompletion = async (studentId: string): Promise<{ p
     missing.push('Add at least one internship record');
   }
 
-  // 7. Certifications (10%) - Has at least one certification
+  // 9. Certifications (10%)
   const certificationCount = await Certification.countDocuments({ student: studentId });
   if (certificationCount > 0) {
     percentage += 10;
@@ -72,7 +91,7 @@ export const calculateProfileCompletion = async (studentId: string): Promise<{ p
     missing.push('Add at least one industry certification');
   }
 
-  // 8. NPTEL (5%) - Has at least one NPTEL record
+  // 10. NPTEL (5%)
   const nptelCount = await NPTELRecord.countDocuments({ student: studentId });
   if (nptelCount > 0) {
     percentage += 5;
@@ -80,23 +99,16 @@ export const calculateProfileCompletion = async (studentId: string): Promise<{ p
     missing.push('Add at least one NPTEL certification');
   }
 
-  // 9. Hackathons (5%) - Has at least one hackathon
+  // 11. Hackathons / Achievements (5%)
   const hackathonCount = await Hackathon.countDocuments({ student: studentId });
-  if (hackathonCount > 0) {
-    percentage += 5;
-  } else {
-    missing.push('Add at least one hackathon participation record');
-  }
-
-  // 10. Achievements (5%) - Has at least one achievement
   const achievementCount = await Achievement.countDocuments({ student: studentId });
-  if (achievementCount > 0) {
+  if (hackathonCount > 0 || achievementCount > 0) {
     percentage += 5;
   } else {
-    missing.push('Add at least one extracurricular or academic achievement');
+    missing.push('Add at least one hackathon or achievement record');
   }
 
-  return { percentage, missing };
+  return { percentage: Math.min(100, percentage), missing };
 };
 
 // Update profile completion for a student in database

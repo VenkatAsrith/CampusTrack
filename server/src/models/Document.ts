@@ -19,6 +19,12 @@ const documentSchema = new mongoose.Schema(
       type: Number,
       required: true,
     },
+    originalSize: {
+      type: Number,
+    },
+    optimizedSize: {
+      type: Number,
+    },
     filePath: {
       type: String,
       required: true,

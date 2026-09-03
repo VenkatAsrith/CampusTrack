@@ -121,8 +121,8 @@ const CodingProfiles: React.FC = () => {
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-3">
-        <div className="h-10 w-10 border-4 border-brand-500 border-t-transparent rounded-full animate-spin"></div>
-        <p className="text-slate-400 text-sm font-semibold">Loading coding profiles...</p>
+        <div className="h-10 w-10 border-4 border-[#3B50DF] border-t-transparent rounded-full animate-spin"></div>
+        <p className="text-[#6C757D] text-sm font-semibold">Loading coding profiles...</p>
       </div>
     );
   }
@@ -132,12 +132,12 @@ const CodingProfiles: React.FC = () => {
       {/* Top action block */}
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-xl font-bold text-white">Coding Platform Profiles</h1>
-          <p className="text-slate-400 text-xs mt-1">Add links to your competitive programming profiles to showcase solving statistics.</p>
+          <h1 className="text-xl font-extrabold text-[#1E1E1E]">Coding Platform Profiles</h1>
+          <p className="text-[#6C757D] text-xs mt-1">Add links to your competitive programming profiles to showcase solving statistics.</p>
         </div>
         <button
           onClick={openAddModal}
-          className="flex items-center px-4 py-2 text-xs font-bold bg-brand-500 hover:bg-brand-600 text-slate-955 rounded-xl shadow-lg transition-all active:scale-95"
+          className="flex items-center px-4 py-2 text-xs font-bold bg-[#3B50DF] hover:bg-[#2E3FB8] text-white shadow-sm rounded-xl shadow-lg transition-all active:scale-95"
         >
           <Plus size={16} className="mr-1" />
           Add Platform
@@ -146,13 +146,13 @@ const CodingProfiles: React.FC = () => {
 
       {/* Grid of profiles */}
       {profiles.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-20 text-center bg-slate-900/20 border border-dashed border-slate-800 rounded-2xl">
-          <Code2 className="h-16 w-16 text-slate-700 mb-3 animate-pulse" />
-          <h3 className="text-base font-bold text-white">No coding profiles added yet</h3>
-          <p className="text-slate-500 text-xs mt-2 max-w-sm">Connect your LeetCode, CodeChef, GeeksforGeeks, or Codeforces accounts to update metrics.</p>
+        <div className="flex flex-col items-center justify-center py-16 text-center bg-white border border-dashed border-[#CBD5E1] rounded-2xl">
+          <Code2 className="h-14 w-14 text-[#94A3B8] mb-3" />
+          <h3 className="text-base font-bold text-[#1E1E1E]">No coding profiles added yet</h3>
+          <p className="text-[#6C757D] text-xs mt-1.5 max-w-sm">Connect your LeetCode, CodeChef, GeeksforGeeks, or Codeforces accounts to update metrics.</p>
           <button
             onClick={openAddModal}
-            className="mt-4 flex items-center px-4 py-2 text-xs font-bold border border-slate-700 hover:border-slate-500 text-slate-300 rounded-xl transition-all"
+            className="mt-4 flex items-center px-4 py-2 text-xs font-bold bg-[#3B50DF] hover:bg-[#2E3FB8] text-white rounded-xl shadow-sm transition active:scale-95"
           >
             <PlusCircle size={14} className="mr-1.5" />
             Add platform now
@@ -163,30 +163,30 @@ const CodingProfiles: React.FC = () => {
           {profiles.map((p) => (
             <div 
               key={p._id}
-              className="bg-slate-900/40 border border-slate-800 rounded-2xl p-5 hover:border-slate-700 transition-all flex flex-col justify-between shadow-md"
+              className="bg-white border border-[#E5E9F2] rounded-2xl shadow-sm hover:shadow-md p-5 hover:border-[#3B50DF] transition-all flex flex-col justify-between shadow-md"
             >
               <div className="flex items-start justify-between">
                 <div className="flex items-center space-x-3">
-                  <div className="h-10 w-10 rounded-xl bg-slate-800 flex items-center justify-center font-black text-brand-400">
+                  <div className="h-10 w-10 rounded-xl bg-[#EEF2FF] border border-[#D9E1FC] flex items-center justify-center font-black text-[#3B50DF]">
                     {p.platform[0]}
                   </div>
                   <div>
-                    <h3 className="font-bold text-white text-base leading-none">{p.platform}</h3>
-                    <span className="text-xs text-slate-500 font-mono mt-1.5 block">{p.username}</span>
+                    <h3 className="font-bold text-[#1E1E1E] text-base leading-none">{p.platform}</h3>
+                    <span className="text-xs text-[#6C757D] font-mono mt-1.5 block">{p.username}</span>
                   </div>
                 </div>
                 
                 <div className="flex items-center space-x-2">
                   <button
                     onClick={() => openEditModal(p)}
-                    className="p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-colors"
+                    className="p-2 text-[#6C757D] hover:text-white hover:bg-[#F4F6FA] rounded-lg transition-colors"
                     title="Edit profile details"
                   >
                     <Edit2 size={14} />
                   </button>
                   <button
                     onClick={() => setDeleteId(p._id)}
-                    className="p-2 text-slate-400 hover:text-rose-450 hover:bg-rose-955/20 rounded-lg transition-colors"
+                    className="p-2 text-[#6C757D] hover:text-rose-450 hover:bg-rose-955/20 rounded-lg transition-colors"
                     title="Remove profile"
                   >
                     <Trash2 size={14} />
@@ -194,27 +194,27 @@ const CodingProfiles: React.FC = () => {
                 </div>
               </div>
 
-              <div className="mt-5 grid grid-cols-3 gap-2 bg-slate-950/40 border border-slate-850 rounded-xl p-3 text-center">
+              <div className="mt-5 grid grid-cols-3 gap-2 bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl p-3 text-center">
                 <div>
-                  <span className="text-[10px] text-slate-500 uppercase font-bold tracking-wider">Rating</span>
-                  <p className="text-sm font-bold text-white mt-1">{p.currentRating || '-'}</p>
+                  <span className="text-[10px] text-[#6C757D] uppercase font-bold tracking-wider">Rating</span>
+                  <p className="text-sm font-bold text-[#1E1E1E] mt-1">{p.currentRating || '-'}</p>
                 </div>
                 <div>
-                  <span className="text-[10px] text-slate-500 uppercase font-bold tracking-wider">Solved</span>
-                  <p className="text-sm font-bold text-white mt-1">{p.problemsSolved || '-'}</p>
+                  <span className="text-[10px] text-[#6C757D] uppercase font-bold tracking-wider">Solved</span>
+                  <p className="text-sm font-bold text-[#1E1E1E] mt-1">{p.problemsSolved || '-'}</p>
                 </div>
                 <div>
-                  <span className="text-[10px] text-slate-500 uppercase font-bold tracking-wider">Rank</span>
-                  <p className="text-sm font-bold text-white mt-1">{p.rank || '-'}</p>
+                  <span className="text-[10px] text-[#6C757D] uppercase font-bold tracking-wider">Rank</span>
+                  <p className="text-sm font-bold text-[#1E1E1E] mt-1">{p.rank || '-'}</p>
                 </div>
               </div>
 
-              <div className="mt-4 pt-3 border-t border-slate-800/60 flex items-center justify-between text-xs">
+              <div className="mt-4 pt-3 border-t border-[#E5E9F2] flex items-center justify-between text-xs">
                 <a 
                   href={p.profileUrl} 
                   target="_blank" 
                   rel="noopener noreferrer"
-                  className="text-brand-400 hover:underline flex items-center"
+                  className="text-[#3B50DF] hover:underline flex items-center"
                 >
                   <Globe size={12} className="mr-1.5" />
                   Visit coding profile
@@ -227,27 +227,35 @@ const CodingProfiles: React.FC = () => {
 
       {/* Add/Edit Modal */}
       {modalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-slate-950/80 backdrop-blur-sm" onClick={() => setModalOpen(false)} />
-          <div className="relative bg-slate-900 border border-slate-800 rounded-2xl p-6 w-full max-w-md shadow-2xl">
-            <h3 className="text-lg font-bold text-white mb-4">
-              {editingProfile ? `Edit ${platform} Details` : 'Add Coding Platform'}
-            </h3>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#151B3B]/60 backdrop-blur-sm overflow-y-auto">
+          <div className="relative bg-white border border-[#E5E9F2] rounded-2xl p-6 w-full max-w-md shadow-2xl overflow-y-auto max-h-[90vh] my-auto">
+            <div className="flex items-center justify-between pb-3 border-b border-[#E5E9F2] mb-4">
+              <h3 className="text-base font-extrabold text-[#1E1E1E]">
+                {editingProfile ? `Edit ${platform} Details` : 'Add Coding Platform'}
+              </h3>
+              <button
+                type="button"
+                onClick={() => setModalOpen(false)}
+                className="h-8 w-8 rounded-lg flex items-center justify-center text-[#6C757D] hover:text-[#1E1E1E] hover:bg-[#F4F6FA] transition"
+              >
+                ✕
+              </button>
+            </div>
             
             <form onSubmit={handleSave} className="space-y-4">
               {formError && (
-                <div className="p-3 bg-rose-955/20 border border-rose-900/40 text-rose-450 rounded-xl text-xs font-semibold">
+                <div className="p-3 bg-rose-50 border border-rose-200 text-rose-800 rounded-xl text-xs font-semibold">
                   {formError}
                 </div>
               )}
 
               <div>
-                <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1.5">Platform</label>
+                <label className="block text-xs font-bold text-[#1E1E1E] uppercase tracking-wider mb-1">Platform *</label>
                 <select
                   disabled={!!editingProfile}
                   value={platform}
                   onChange={(e) => setPlatform(e.target.value)}
-                  className="block w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-sm text-white focus:outline-none focus:ring-2 focus:ring-brand-500 disabled:opacity-50"
+                  className="block w-full px-3.5 py-2.5 bg-white border border-[#E2E8F0] rounded-xl text-xs text-[#1E1E1E] focus:outline-none focus:border-[#3B50DF] focus:ring-2 focus:ring-[#3B50DF]/15 disabled:opacity-50"
                 >
                   {['LeetCode', 'CodeChef', 'HackerRank', 'GeeksforGeeks', 'Codeforces', 'Other'].map(plat => (
                     <option key={plat} value={plat}>{plat}</option>
@@ -256,87 +264,87 @@ const CodingProfiles: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1.5">Platform Username</label>
+                <label className="block text-xs font-bold text-[#1E1E1E] uppercase tracking-wider mb-1">Platform Username *</label>
                 <input
                   type="text"
                   required
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
                   placeholder="e.g. rollno_name"
-                  className="block w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-sm text-white focus:outline-none focus:ring-2 focus:ring-brand-500"
+                  className="block w-full px-3.5 py-2.5 bg-white border border-[#E2E8F0] rounded-xl text-xs text-[#1E1E1E] focus:outline-none focus:border-[#3B50DF] focus:ring-2 focus:ring-[#3B50DF]/15"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1.5">Profile URL</label>
+                <label className="block text-xs font-bold text-[#1E1E1E] uppercase tracking-wider mb-1">Profile URL *</label>
                 <input
                   type="url"
                   required
                   value={profileUrl}
                   onChange={(e) => setProfileUrl(e.target.value)}
                   placeholder="https://..."
-                  className="block w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-sm text-white focus:outline-none focus:ring-2 focus:ring-brand-500"
+                  className="block w-full px-3.5 py-2.5 bg-white border border-[#E2E8F0] rounded-xl text-xs text-[#1E1E1E] focus:outline-none focus:border-[#3B50DF] focus:ring-2 focus:ring-[#3B50DF]/15"
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1.5">Current Rating</label>
+                  <label className="block text-xs font-bold text-[#1E1E1E] uppercase tracking-wider mb-1">Current Rating</label>
                   <input
                     type="number"
                     value={currentRating}
                     onChange={(e) => setCurrentRating(e.target.value)}
                     placeholder="e.g. 1540"
-                    className="block w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-sm text-white focus:outline-none focus:ring-2 focus:ring-brand-500"
+                    className="block w-full px-3.5 py-2.5 bg-white border border-[#E2E8F0] rounded-xl text-xs text-[#1E1E1E] focus:outline-none focus:border-[#3B50DF] focus:ring-2 focus:ring-[#3B50DF]/15"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1.5">Highest Rating</label>
+                  <label className="block text-xs font-bold text-[#1E1E1E] uppercase tracking-wider mb-1">Highest Rating</label>
                   <input
                     type="number"
                     value={highestRating}
                     onChange={(e) => setHighestRating(e.target.value)}
                     placeholder="e.g. 1620"
-                    className="block w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-sm text-white focus:outline-none focus:ring-2 focus:ring-brand-500"
+                    className="block w-full px-3.5 py-2.5 bg-white border border-[#E2E8F0] rounded-xl text-xs text-[#1E1E1E] focus:outline-none focus:border-[#3B50DF] focus:ring-2 focus:ring-[#3B50DF]/15"
                   />
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1.5">Global Rank</label>
+                  <label className="block text-xs font-bold text-[#1E1E1E] uppercase tracking-wider mb-1">Global Rank</label>
                   <input
                     type="number"
                     value={rank}
                     onChange={(e) => setRank(e.target.value)}
                     placeholder="e.g. 23500"
-                    className="block w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-sm text-white focus:outline-none focus:ring-2 focus:ring-brand-500"
+                    className="block w-full px-3.5 py-2.5 bg-white border border-[#E2E8F0] rounded-xl text-xs text-[#1E1E1E] focus:outline-none focus:border-[#3B50DF] focus:ring-2 focus:ring-[#3B50DF]/15"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1.5">Problems Solved</label>
+                  <label className="block text-xs font-bold text-[#1E1E1E] uppercase tracking-wider mb-1">Problems Solved</label>
                   <input
                     type="number"
                     value={problemsSolved}
                     onChange={(e) => setProblemsSolved(e.target.value)}
                     placeholder="e.g. 250"
-                    className="block w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-sm text-white focus:outline-none focus:ring-2 focus:ring-brand-500"
+                    className="block w-full px-3.5 py-2.5 bg-white border border-[#E2E8F0] rounded-xl text-xs text-[#1E1E1E] focus:outline-none focus:border-[#3B50DF] focus:ring-2 focus:ring-[#3B50DF]/15"
                   />
                 </div>
               </div>
 
-              <div className="mt-6 flex justify-end space-x-3 pt-3">
+              <div className="mt-6 flex justify-end space-x-3 pt-3 border-t border-[#E5E9F2]">
                 <button
                   type="button"
                   onClick={() => setModalOpen(false)}
-                  className="px-4 py-2 border border-slate-700 rounded-xl text-slate-350 text-sm font-semibold hover:bg-slate-800 transition-colors"
+                  className="px-4 py-2 border border-[#E2E8F0] bg-white rounded-xl text-[#6C757D] text-xs font-semibold hover:bg-[#F4F6FA] transition"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={saving}
-                  className="px-5 py-2 bg-brand-500 hover:bg-brand-600 disabled:opacity-50 text-slate-955 rounded-xl text-sm font-bold shadow-md flex items-center"
+                  className="px-5 py-2 bg-[#3B50DF] hover:bg-[#2E3FB8] disabled:opacity-50 text-white rounded-xl text-xs font-bold shadow-md shadow-[#3B50DF]/20 flex items-center transition active:scale-95"
                 >
                   {saving && <Loader2 className="animate-spin h-3.5 w-3.5 mr-1.5" />}
                   {editingProfile ? 'Save Changes' : 'Add Profile'}

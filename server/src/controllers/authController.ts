@@ -72,6 +72,7 @@ export const registerStudent = catchAsync(async (req: AuthenticatedRequest, res:
     section,
     batch,
     cgpa,
+    year: parsed.data.year || Math.min(Math.max(Math.ceil(semester / 2), 1), 4),
     semester,
     careerInterest,
     profileCompletion: 20, // 20% weight for Basic Profile setup
@@ -105,25 +106,28 @@ export const login = catchAsync(async (req: AuthenticatedRequest, res: Response,
     return next(new AppError(parsed.error.errors[0].message, 400));
   }
 
-  const { rollNumber, email, password } = parsed.data;
+  const { identifier, rollNumber, email, password } = parsed.data;
+  const rawInput = (identifier || rollNumber || email || '').trim();
+  const isEmail = rawInput.includes('@');
 
   let user;
-  if (rollNumber) {
-    // Student Login by Roll Number
-    user = await User.findOne({ rollNumber }).select('+password');
+  if (isEmail) {
+    // TPO / Admin Login by Email
+    user = await User.findOne({ email: rawInput.toLowerCase() }).select('+password');
     if (!user) {
-      return next(new AppError('Invalid Roll Number or Password.', 401));
+      return next(new AppError("User doesn't exist. Please check your official email.", 404));
     }
-  } else if (email) {
-    // Admin Login by Email
-    user = await User.findOne({ email }).select('+password');
+  } else {
+    // Student Login by Roll Number (case-insensitive via uppercase)
+    const upperRoll = rawInput.toUpperCase();
+    user = await User.findOne({ rollNumber: upperRoll }).select('+password');
     if (!user) {
-      return next(new AppError('Invalid Email or Password.', 401));
+      return next(new AppError("User doesn't exist. Please check your roll number.", 404));
     }
   }
 
   if (!user || !(await (user as any).comparePassword(password))) {
-    return next(new AppError('Invalid credentials.', 401));
+    return next(new AppError('Incorrect password. Please verify your password and try again.', 401));
   }
 
   // Fetch student profile if the role is student
