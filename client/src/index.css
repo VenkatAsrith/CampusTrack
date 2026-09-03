@@ -38,6 +38,24 @@
   --ct-sidebar-text: #E0E4FC;
 }
 
+[data-theme="monochrome"] {
+  --ct-bg: #F0F0F0;
+  --ct-surface: #FFFFFF;
+  --ct-surface-soft: #F8F8F8;
+  --ct-primary: #000000;
+  --ct-primary-hover: #181818;
+  --ct-primary-soft: #E0E0E0;
+  --ct-primary-border: #D8D8D8;
+  --ct-border: #D8D8D8;
+  --ct-border-soft: #E8E8E8;
+  --ct-text: #000000;
+  --ct-text-muted: #888888;
+  --ct-sidebar: #181818;
+  --ct-sidebar-card: #262626;
+  --ct-sidebar-border: #333333;
+  --ct-sidebar-text: #F0F0F0;
+}
+
 @layer base {
   body {
     background-color: var(--ct-bg);
@@ -243,6 +261,73 @@
 }
 
 /* =========================================================
+   🖤 THEME 6 — MONOCHROME MINIMAL OVERRIDES
+   ========================================================= */
+[data-theme="monochrome"] .bg-\[\#3B50DF\] {
+  background-color: #000000 !important;
+}
+
+[data-theme="monochrome"] .hover\:bg-\[\#2E3FB8\]:hover {
+  background-color: #181818 !important;
+}
+
+[data-theme="monochrome"] .text-\[\#3B50DF\] {
+  color: #000000 !important;
+}
+
+[data-theme="monochrome"] .bg-\[\#EEF2FF\] {
+  background-color: #E0E0E0 !important;
+}
+
+[data-theme="monochrome"] .border-\[\#D9E1FC\] {
+  border-color: #D8D8D8 !important;
+}
+
+[data-theme="monochrome"] .border-\[\#3B50DF\] {
+  border-color: #000000 !important;
+}
+
+[data-theme="monochrome"] .focus\:border-\[\#3B50DF\]:focus {
+  border-color: #000000 !important;
+}
+
+[data-theme="monochrome"] .focus\:ring-\[\#3B50DF\]\/15:focus {
+  --tw-ring-color: rgba(0, 0, 0, 0.12) !important;
+}
+
+[data-theme="monochrome"] .shadow-\[\#3B50DF\]\/30 {
+  --tw-shadow-color: rgba(0, 0, 0, 0.2) !important;
+}
+
+[data-theme="monochrome"] .shadow-\[\#3B50DF\]\/20 {
+  --tw-shadow-color: rgba(0, 0, 0, 0.12) !important;
+}
+
+[data-theme="monochrome"] .bg-\[\#F4F6FA\] {
+  background-color: #F0F0F0 !important;
+}
+
+[data-theme="monochrome"] .bg-\[\#F8FAFC\] {
+  background-color: #F8F8F8 !important;
+}
+
+[data-theme="monochrome"] .border-\[\#E5E9F2\] {
+  border-color: #D8D8D8 !important;
+}
+
+[data-theme="monochrome"] .border-\[\#E2E8F0\] {
+  border-color: #D8D8D8 !important;
+}
+
+[data-theme="monochrome"] .text-\[\#1E1E1E\] {
+  color: #000000 !important;
+}
+
+[data-theme="monochrome"] .text-\[\#6C757D\] {
+  color: #888888 !important;
+}
+
+/* =========================================================
    🌙 CAMPUS TRACK UNIFIED DARK THEME ENGINE
    ========================================================= */
 html.dark body {
@@ -414,3 +499,77 @@ html.dark[data-theme="coral"] ::-webkit-scrollbar-thumb {
 html.dark ::-webkit-scrollbar-thumb:hover {
   background: #475569;
 }
+
+/* Monochrome Minimal Dark Mode */
+html.dark[data-theme="monochrome"] body {
+  background-color: #000000 !important;
+  color: #FFFFFF !important;
+}
+
+html.dark[data-theme="monochrome"] .bg-white {
+  background-color: #181818 !important;
+}
+
+html.dark[data-theme="monochrome"] .bg-\[\#F4F6FA\],
+html.dark[data-theme="monochrome"] .bg-\[\#F0F0F0\] {
+  background-color: #000000 !important;
+}
+
+html.dark[data-theme="monochrome"] .bg-\[\#F8FAFC\],
+html.dark[data-theme="monochrome"] .bg-\[\#F8F8F8\] {
+  background-color: #181818 !important;
+}
+
+html.dark[data-theme="monochrome"] .border-\[\#E5E9F2\],
+html.dark[data-theme="monochrome"] .border-\[\#E2E8F0\],
+html.dark[data-theme="monochrome"] .border-\[\#D8D8D8\] {
+  border-color: #333333 !important;
+}
+
+html.dark[data-theme="monochrome"] .text-\[\#1E1E1E\],
+html.dark[data-theme="monochrome"] .text-\[\#000000\] {
+  color: #FFFFFF !important;
+}
+
+html.dark[data-theme="monochrome"] .text-\[\#6C757D\],
+html.dark[data-theme="monochrome"] .text-\[\#888888\] {
+  color: #AAAAAA !important;
+}
+
+html.dark[data-theme="monochrome"] .bg-\[\#EEF2FF\],
+html.dark[data-theme="monochrome"] .bg-\[\#E0E0E0\] {
+  background-color: #262626 !important;
+}
+
+html.dark[data-theme="monochrome"] .border-\[\#D9E1FC\] {
+  border-color: #404040 !important;
+}
+
+html.dark[data-theme="monochrome"] .text-\[\#3B50DF\],
+html.dark[data-theme="monochrome"] .text-\[\#000000\] {
+  color: #FFFFFF !important;
+}
+
+html.dark[data-theme="monochrome"] input:not([type='checkbox']):not([type='radio']),
+html.dark[data-theme="monochrome"] select,
+html.dark[data-theme="monochrome"] textarea {
+  background-color: #181818 !important;
+  color: #FFFFFF !important;
+  border-color: #404040 !important;
+}
+
+html.dark[data-theme="monochrome"] input:focus,
+html.dark[data-theme="monochrome"] select:focus,
+html.dark[data-theme="monochrome"] textarea:focus {
+  border-color: #FFFFFF !important;
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.2) !important;
+}
+
+html.dark[data-theme="monochrome"] ::-webkit-scrollbar-track {
+  background: #000000;
+}
+
+html.dark[data-theme="monochrome"] ::-webkit-scrollbar-thumb {
+  background: #333333;
+}
+

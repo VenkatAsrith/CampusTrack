@@ -6,7 +6,7 @@ interface ThemeToggleProps {
   showLabel?: boolean;
 }
 
-export type ThemePalette = 'default' | 'coral';
+export type ThemePalette = 'default' | 'coral' | 'monochrome';
 
 interface PaletteOption {
   id: ThemePalette;
@@ -18,6 +18,7 @@ interface PaletteOption {
 const PALETTES: PaletteOption[] = [
   { id: 'default', name: 'Royal Classic', color: '#3B50DF', secondary: '#EEF2FF' },
   { id: 'coral', name: 'Coral Minimal', color: '#F05A24', secondary: '#FDE1D1' },
+  { id: 'monochrome', name: 'Monochrome Minimal', color: '#000000', secondary: '#E0E0E0' },
 ];
 
 const ThemeToggle: React.FC<ThemeToggleProps> = ({ className = '', showLabel = false }) => {
@@ -35,7 +36,7 @@ const ThemeToggle: React.FC<ThemeToggleProps> = ({ className = '', showLabel = f
   const [palette, setPalette] = useState<ThemePalette>(() => {
     if (typeof window !== 'undefined') {
       const savedPalette = localStorage.getItem('campustrack_palette') as ThemePalette;
-      if (savedPalette && (savedPalette === 'coral' || savedPalette === 'default')) {
+      if (savedPalette && (savedPalette === 'coral' || savedPalette === 'default' || savedPalette === 'monochrome')) {
         return savedPalette;
       }
     }
@@ -86,6 +87,12 @@ const ThemeToggle: React.FC<ThemeToggleProps> = ({ className = '', showLabel = f
     setPaletteMenuOpen(false);
   };
 
+  const getAccentColorClass = () => {
+    if (palette === 'coral') return 'text-[#F05A24]';
+    if (palette === 'monochrome') return 'text-black dark:text-white';
+    return 'text-[#3B50DF]';
+  };
+
   return (
     <div className={`flex items-center space-x-1.5 relative ${className}`} ref={menuRef}>
       {/* Palette Selector Button */}
@@ -101,12 +108,12 @@ const ThemeToggle: React.FC<ThemeToggleProps> = ({ className = '', showLabel = f
           title="Select Color Theme"
           aria-label="Select Color Theme"
         >
-          <Palette size={18} className={palette === 'coral' ? 'text-[#F05A24]' : 'text-[#3B50DF]'} />
+          <Palette size={18} className={getAccentColorClass()} />
         </button>
 
         {/* Palette Dropdown Menu */}
         {paletteMenuOpen && (
-          <div className="absolute right-0 mt-2 w-48 rounded-xl bg-white dark:bg-[#1E293B] border border-[#E5E9F2] dark:border-[#334155] shadow-xl py-1.5 z-50 animate-in fade-in zoom-in-95 duration-150">
+          <div className="absolute right-0 mt-2 w-52 rounded-xl bg-white dark:bg-[#1E293B] border border-[#E5E9F2] dark:border-[#334155] shadow-xl py-1.5 z-50 animate-in fade-in zoom-in-95 duration-150">
             <div className="px-3 py-1 text-[10px] uppercase font-bold text-[#6C757D] dark:text-slate-400 tracking-wider">
               Theme Palette
             </div>
@@ -154,7 +161,7 @@ const ThemeToggle: React.FC<ThemeToggleProps> = ({ className = '', showLabel = f
           {isDark ? (
             <Sun size={18} className="transition-transform duration-300 rotate-0 scale-100 text-amber-400" />
           ) : (
-            <Moon size={18} className={`transition-transform duration-300 rotate-0 scale-100 ${palette === 'coral' ? 'text-[#F05A24]' : 'text-[#3B50DF]'}`} />
+            <Moon size={18} className={`transition-transform duration-300 rotate-0 scale-100 ${getAccentColorClass()}`} />
           )}
         </div>
 

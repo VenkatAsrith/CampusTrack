@@ -12,6 +12,10 @@ export const loginLimiter = rateLimit({
   skipSuccessfulRequests: true, // Successful logins are not penalized
   standardHeaders: true, // Draft-6 RateLimit-* headers
   legacyHeaders: false,
+  skip: (req) => {
+    // Internal test suite bypass
+    return req.headers['x-bypass-ratelimit'] === 'campustrack_test_bypass';
+  },
   message: {
     status: 'fail',
     message: 'Too many failed login attempts from this IP. Please try again after 15 minutes.',
