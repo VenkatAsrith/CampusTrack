@@ -81,11 +81,17 @@ export const seedData = async () => {
 
     console.log('🔑 Creating TPO (Admin) account...');
     const adminUser = await User.create({
+      email: 'tpo@jntu.in',
+      password: 'TPO@2026',
+      role: 'admin',
+    });
+    // Secondary fallback admin
+    await User.create({
       email: 'admin@college.edu',
       password: 'admin123',
       role: 'admin',
     });
-    console.log(`✅ TPO created: admin@college.edu / admin123`);
+    console.log(`✅ Official TPO created: tpo@jntu.in / TPO@2026`);
 
     // Create a mock proof document
     const mockDocument = await Document.create({

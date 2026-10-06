@@ -15,9 +15,10 @@ import {
   Layers,
   Award,
   Camera,
-  Loader2
+  Loader2,
+  Check
 } from 'lucide-react';
-import api from '../services/api';
+import api, { API_BASE_URL } from '../services/api';
 import FileUploader from '../components/FileUploader';
 import type { Student, SemesterResult } from '../types';
 
@@ -62,6 +63,7 @@ const StudentProfile: React.FC = () => {
   const [photoUploading, setPhotoUploading] = useState(false);
   const photoInputRef = React.useRef<HTMLInputElement>(null);
   const [activeTab, setActiveTab] = useState<'personal' | 'parent' | 'address' | 'academic' | 'professional'>('personal');
+  const [lastAutoSaved, setLastAutoSaved] = useState<string | null>(null);
 
   // Semester results state for dynamic semester percentages
   const [semesterResults, setSemesterResults] = useState<SemesterResult[]>([]);
@@ -138,6 +140,21 @@ const StudentProfile: React.FC = () => {
           });
         }
         setSemesterResults(fullResults);
+
+        // Check for local unsaved draft
+        const savedDraft = localStorage.getItem('campustrack_profile_draft');
+        if (savedDraft) {
+          try {
+            const parsedDraft = JSON.parse(savedDraft);
+            if (parsedDraft.values) {
+              reset({ ...parsedDraft.values });
+              if (parsedDraft.semesterResults) {
+                setSemesterResults(parsedDraft.semesterResults);
+              }
+              setLastAutoSaved(new Date(parsedDraft.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
+            }
+          } catch {}
+        }
       } catch (err) {
         console.error('Failed to load profile.', err);
       } finally {
@@ -146,6 +163,24 @@ const StudentProfile: React.FC = () => {
     };
     fetchProfile();
   }, [reset]);
+
+  // Debounced auto-save watched values locally
+  const watchedValues = watch();
+  useEffect(() => {
+    if (!loading && profile) {
+      const timer = setTimeout(() => {
+        try {
+          localStorage.setItem('campustrack_profile_draft', JSON.stringify({
+            values: watchedValues,
+            semesterResults,
+            timestamp: new Date().toISOString()
+          }));
+          setLastAutoSaved(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
+        } catch {}
+      }, 800);
+      return () => clearTimeout(timer);
+    }
+  }, [watchedValues, semesterResults, loading, profile]);
 
   // Adjust semester when year changes if needed
   const handleYearChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -247,6 +282,8 @@ const StudentProfile: React.FC = () => {
       if (res.data.status === 'success') {
         setSuccessMsg('Profile and Academic information updated successfully! Overall CGPA recalculated.');
         setProfile(res.data.data);
+        localStorage.removeItem('campustrack_profile_draft');
+        setLastAutoSaved(null);
 
         // Update local stored student
         const local = JSON.parse(localStorage.getItem('campustrack_student') || '{}');
@@ -357,6 +394,13 @@ const StudentProfile: React.FC = () => {
             <span>{tab.label}</span>
           </button>
         ))}
+
+        {lastAutoSaved && (
+          <div className="ml-auto hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 text-xs font-semibold self-center">
+            <Check size={13} className="text-emerald-500" />
+            <span>Draft auto-saved ({lastAutoSaved})</span>
+          </div>
+        )}
       </div>
 
       {/* Form Container */}
@@ -852,7 +896,7 @@ const StudentProfile: React.FC = () => {
                     documentType="resume"
                     initialFileName={profile?.resumeLink?.includes('cloudinary') || profile?.resumeLink?.includes('/documents/') ? 'Current Resume PDF' : undefined}
                     onUploadSuccess={(docId, _fileData) => {
-                      const link = `/api/v1/documents/${docId}`;
+                      const link = `${API_BASE_URL}/api/v1/documents/${docId}`;
                       setValue('resumeLink', link);
                       setSuccessMsg('Resume PDF uploaded to Cloudinary! Remember to click "Save Profile & Academics".');
                     }}

@@ -30,13 +30,23 @@ app.use(helmet({
 const allowedOrigins = [
   'http://localhost:5173',
   'http://127.0.0.1:5173',
+  'http://localhost:3000',
+  'http://localhost:4173',
   config.CLIENT_URL,
 ].filter(Boolean);
 
 app.use(cors({
   origin: (origin, callback) => {
-    // Allow requests with no origin (e.g. mobile apps, curl, server-to-server, Google Apps Script)
-    if (!origin || allowedOrigins.includes(origin) || config.NODE_ENV === 'development') {
+    // Allow requests with no origin (e.g. mobile apps, curl, server-to-server)
+    if (
+      !origin ||
+      allowedOrigins.includes(origin) ||
+      config.NODE_ENV === 'development' ||
+      origin.endsWith('.vercel.app') ||
+      origin.endsWith('.onrender.com') ||
+      origin.endsWith('.netlify.app') ||
+      origin.includes('localhost')
+    ) {
       callback(null, true);
     } else {
       callback(new Error('CORS policy: Origin not permitted'));

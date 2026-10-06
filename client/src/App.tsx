@@ -8,6 +8,7 @@ import AdminLayout from './layouts/AdminLayout';
 
 // Pages
 import SignIn from './pages/SignIn';
+import TpoSignIn from './pages/TpoSignIn';
 import StudentDashboard from './pages/StudentDashboard';
 import StudentProfile from './pages/StudentProfile';
 import StudentAnnouncements from './pages/StudentAnnouncements';
@@ -27,6 +28,8 @@ import AuditLogs from './pages/AuditLogs';
 import TpoSettings from './pages/TpoSettings';
 import SemesterPromotion from './pages/SemesterPromotion';
 import BatchManagement from './pages/BatchManagement';
+import NotFound from './pages/NotFound';
+import LatencyIndicator from './components/LatencyIndicator';
 
 // Create a client for React Query
 const queryClient = new QueryClient({
@@ -42,6 +45,7 @@ const App: React.FC = () => {
   return (
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
+        <LatencyIndicator />
         <Routes>
           {/* Default Route */}
           <Route path="/" element={<Navigate to="/signin" replace />} />
@@ -49,6 +53,8 @@ const App: React.FC = () => {
           {/* Auth Routes */}
           <Route path="/signin" element={<SignIn />} />
           <Route path="/login" element={<SignIn />} />
+          <Route path="/tpo" element={<TpoSignIn />} />
+          <Route path="/admin/login" element={<TpoSignIn />} />
 
           {/* Student Portal Protected Routes */}
           <Route path="/student" element={<StudentLayout />}>
@@ -78,8 +84,8 @@ const App: React.FC = () => {
             <Route path="settings" element={<TpoSettings />} />
           </Route>
 
-          {/* Catch All Redirect */}
-          <Route path="*" element={<Navigate to="/signin" replace />} />
+          {/* Catch All 404 Route */}
+          <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
     </QueryClientProvider>

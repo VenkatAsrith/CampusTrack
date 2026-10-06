@@ -24,9 +24,31 @@ const logAction = async (userId: string, userName: string, action: string, entit
   }
 };
 
+// In-Memory Announcement Cache for 2,000+ Concurrent Placement Rush Optimization
+interface CacheEntry {
+  data: any;
+  timestamp: number;
+}
+const announcementCache = new Map<string, CacheEntry>();
+const CACHE_TTL_MS = 20 * 1000; // 20 seconds TTL
+
+export const invalidateAnnouncementsCache = () => {
+  announcementCache.clear();
+};
+
 // 1. Get Public Announcements (for students & general view)
-export const getPublicAnnouncements = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+export const getPublicAnnouncements = catchAsync(async (req: Request, res: Response, _next: NextFunction) => {
   const { type, isPlacementDrive, search } = req.query;
+
+  const cacheKey = `public_${type || 'all'}_${isPlacementDrive || 'false'}_${search || ''}`;
+
+  // Serve from cache if available and fresh
+  const cached = announcementCache.get(cacheKey);
+  if (cached && Date.now() - cached.timestamp < CACHE_TTL_MS) {
+    res.setHeader('X-Cache', 'HIT');
+    res.setHeader('Cache-Control', 'public, max-age=15');
+    return res.status(200).json(cached.data);
+  }
 
   const now = new Date();
   const query: any = {
@@ -76,7 +98,7 @@ export const getPublicAnnouncements = catchAsync(async (req: Request, res: Respo
     }
   });
 
-  res.status(200).json({
+  const responsePayload = {
     status: 'success',
     total: announcements.length,
     data: {
@@ -85,7 +107,17 @@ export const getPublicAnnouncements = catchAsync(async (req: Request, res: Respo
       upcoming,
       placementDrives,
     },
+  };
+
+  // Cache response for 20 seconds
+  announcementCache.set(cacheKey, {
+    data: responsePayload,
+    timestamp: Date.now(),
   });
+
+  res.setHeader('X-Cache', 'MISS');
+  res.setHeader('Cache-Control', 'public, max-age=15');
+  res.status(200).json(responsePayload);
 });
 
 // 2. Get Single Announcement by ID
@@ -190,6 +222,8 @@ export const createAnnouncement = catchAsync(async (req: AuthenticatedRequest, r
     announcement._id
   );
 
+  invalidateAnnouncementsCache();
+
   res.status(201).json({
     status: 'success',
     message: 'Announcement created successfully.',
@@ -251,6 +285,8 @@ export const updateAnnouncement = catchAsync(async (req: AuthenticatedRequest, r
     announcement._id
   );
 
+  invalidateAnnouncementsCache();
+
   res.status(200).json({
     status: 'success',
     message: 'Announcement updated successfully.',
@@ -275,6 +311,8 @@ export const deleteAnnouncement = catchAsync(async (req: AuthenticatedRequest, r
     announcement._id
   );
 
+  invalidateAnnouncementsCache();
+
   res.status(200).json({
     status: 'success',
     message: 'Announcement deleted successfully.',
@@ -298,6 +336,8 @@ export const togglePublishAnnouncement = catchAsync(async (req: AuthenticatedReq
     'Announcement',
     announcement._id
   );
+
+  invalidateAnnouncementsCache();
 
   res.status(200).json({
     status: 'success',
@@ -328,6 +368,8 @@ export const updateDeadline = catchAsync(async (req: AuthenticatedRequest, res: 
     'Announcement',
     announcement._id
   );
+
+  invalidateAnnouncementsCache();
 
   res.status(200).json({
     status: 'success',

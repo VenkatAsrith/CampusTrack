@@ -13,9 +13,12 @@ export const connectDB = async (): Promise<void> => {
     try {
       console.log('📡 Connecting to configured MongoDB URI...');
       await mongoose.connect(mongoUri, {
+        maxPoolSize: 50,
+        minPoolSize: 10,
         serverSelectionTimeoutMS: 5000,
+        socketTimeoutMS: 45000,
       });
-      console.log(`💚 MongoDB Connected: ${mongoose.connection.host}`);
+      console.log(`💚 MongoDB Connected: ${mongoose.connection.host} (Pool Size: 10-50 connections)`);
       return;
     } catch (err: any) {
       console.warn('⚠️ Could not connect to remote MongoDB Atlas:');

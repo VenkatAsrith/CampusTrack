@@ -1,3 +1,5 @@
+import { API_BASE_URL } from '../services/api';
+
 /**
  * Generates an authenticated URL for viewing documents online inside the browser.
  * Routes through the CampusTrack backend API with the active JWT query token,
@@ -8,9 +10,9 @@ export const getDocumentViewUrl = (documentId?: string): string => {
   if (!documentId) return '#';
   const token = localStorage.getItem('campustrack_token');
   if (token) {
-    return `/api/v1/documents/${documentId}?token=${encodeURIComponent(token)}`;
+    return `${API_BASE_URL}/api/v1/documents/${documentId}?token=${encodeURIComponent(token)}`;
   }
-  return `/api/v1/documents/${documentId}`;
+  return `${API_BASE_URL}/api/v1/documents/${documentId}`;
 };
 
 /**
@@ -22,9 +24,9 @@ export const getDocumentDownloadUrl = (documentId?: string): string => {
   if (!documentId) return '#';
   const token = localStorage.getItem('campustrack_token');
   if (token) {
-    return `/api/v1/documents/${documentId}?token=${encodeURIComponent(token)}&download=true`;
+    return `${API_BASE_URL}/api/v1/documents/${documentId}?token=${encodeURIComponent(token)}&download=true`;
   }
-  return `/api/v1/documents/${documentId}?download=true`;
+  return `${API_BASE_URL}/api/v1/documents/${documentId}?download=true`;
 };
 
 /**

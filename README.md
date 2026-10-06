@@ -100,5 +100,24 @@ The client will be running at `http://localhost:5173` and the API server at `htt
 
 ---
 
+## 🏛️ Institutional Access Portals
+
+### 1. Student Portal (`/` and `/signin`)
+* **URL**: `http://localhost:5173/signin`
+* **Features**:
+  * Clean, student-focused institutional interface (no marketing or test data clutter).
+  * Real-time roll number intelligence engine (parses batch, branch, entry type, and roll sequence from roll number).
+  * Progressive 4-step registration onboarding with duplicate account prevention.
+* **Student Sign In**: Institutional Roll Number (e.g., `23SS1A0535`) + Password.
+
+### 2. Training & Placement Cell (TPO) Portal (`/tpo`)
+* **URL**: `http://localhost:5173/tpo` (also accessible via `/admin/login`)
+* **Official Officer Credentials**:
+  * **Email**: `tpo@jntu.in`
+  * **Password**: `TPO@2026`
+* **Features**: Placement drive management, Google-Forms-style universal form builder, candidate eligibility filtering, status lifecycle pipeline, and deterministic ExcelJS exports.
+
+---
+
 ## 📄 License
-This project is proprietary and maintained for **JNTUH University College of Engineering**.
+This project is proprietary and maintained for **JNTUH University College of Engineering Sulthanpur**.

@@ -1,10 +1,9 @@
 import React, { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { 
   Settings, 
   FileSpreadsheet, 
   ShieldCheck, 
-  RefreshCw, 
-  ExternalLink, 
   CheckCircle2, 
   AlertCircle, 
   Building2, 
@@ -16,16 +15,6 @@ import {
   Sparkles
 } from 'lucide-react';
 import api from '../services/api';
-
-interface SyncStatus {
-  success: boolean;
-  spreadsheetId: string;
-  spreadsheetUrl: string;
-  lastSyncTimestamp: string | null;
-  lastSyncAction: string;
-  totalStudentsInMongoDB: number;
-  syncSecretConfigured: boolean;
-}
 
 interface StorageStats {
   summary: {
@@ -46,47 +35,21 @@ interface StorageStats {
 }
 
 const TpoSettings: React.FC = () => {
-  const [status, setStatus] = useState<SyncStatus | null>(null);
   const [storageStats, setStorageStats] = useState<StorageStats | null>(null);
-  const [syncing, setSyncing] = useState(false);
   const [banner, setBanner] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
 
   const fetchStatus = async () => {
     try {
-      const [syncRes, storageRes] = await Promise.allSettled([
-        api.get('/sync/status'),
-        api.get('/documents/storage/stats')
-      ]);
-      if (syncRes.status === 'fulfilled') setStatus(syncRes.value.data);
-      if (storageRes.status === 'fulfilled') setStorageStats(storageRes.value.data.data);
+      const storageRes = await api.get('/documents/storage/stats');
+      setStorageStats(storageRes.data?.data || null);
     } catch (err: any) {
-      console.error('Failed to fetch settings/storage status', err);
+      console.error('Failed to fetch storage status', err);
     }
   };
 
   useEffect(() => {
     fetchStatus();
   }, []);
-
-  const handleSyncToSheets = async () => {
-    setSyncing(true);
-    setBanner(null);
-    try {
-      const res = await api.get('/sync/google-sheets/students');
-      setBanner({
-        type: 'success',
-        message: `Successfully synchronized ${res.data.count} student records to Google Sheet!`,
-      });
-      fetchStatus();
-    } catch (err: any) {
-      setBanner({
-        type: 'error',
-        message: err.response?.data?.message || 'Failed to sync with Google Sheets',
-      });
-    } finally {
-      setSyncing(false);
-    }
-  };
 
   return (
     <div className="space-y-6 select-none max-w-5xl mx-auto">
@@ -166,16 +129,16 @@ const TpoSettings: React.FC = () => {
         </div>
       </div>
 
-      {/* 2. Google Sheets Two-Way Synchronization */}
+      {/* 2. Institutional Excel Direct Reports */}
       <div className="bg-white border border-[#E5E9F2] rounded-2xl p-6 shadow-sm space-y-5">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-[#E5E9F2] pb-3">
           <h2 className="text-[15px] font-semibold text-[#1E1E1E] uppercase tracking-wider flex items-center">
             <FileSpreadsheet size={16} className="mr-2 text-[#3B50DF]" />
-            2. Google Sheets Two-Way Synchronization
+            2. Institutional Excel Export Engine
           </h2>
           <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-1.5" />
-            Integration Active
+            Direct MongoDB Export Active
           </span>
         </div>
 
@@ -183,56 +146,43 @@ const TpoSettings: React.FC = () => {
           <div className="p-4 rounded-xl bg-[#F8FAFC] border border-[#E2E8F0] space-y-3">
             <div>
               <span className="text-[10px] text-[#6C757D] uppercase font-bold tracking-wider block">
-                Connected Spreadsheet ID
+                Primary Database Source
               </span>
-              <p className="text-xs font-mono font-bold text-[#1E1E1E] mt-0.5 break-all">
-                {status?.spreadsheetId || '1w2T9SHihyIOdKWXCkYYPu7R_U2ZYqB3j4zhrQjXKQBk'}
+              <p className="text-xs font-mono font-bold text-[#1E1E1E] mt-0.5">
+                MongoDB Institutional Cluster (campustrack)
               </p>
             </div>
 
             <div>
               <span className="text-[10px] text-[#6C757D] uppercase font-bold tracking-wider block">
-                Total Students in Database
+                Deterministic Output Format
               </span>
-              <p className="text-[22px] font-bold text-[#1E1E1E] mt-0.5">
-                {status?.totalStudentsInMongoDB ?? 78} Records
+              <p className="text-sm font-bold text-[#1E1E1E] mt-0.5">
+                Microsoft Excel Workbook (.xlsx) via ExcelJS
               </p>
             </div>
 
             <div className="pt-1 flex flex-wrap gap-2">
-              <a
-                href={status?.spreadsheetUrl || 'https://docs.google.com/spreadsheets/d/1w2T9SHihyIOdKWXCkYYPu7R_U2ZYqB3j4zhrQjXKQBk/edit'}
-                target="_blank"
-                rel="noreferrer"
-                className="inline-flex items-center px-4 py-2 rounded-xl bg-white hover:bg-[#F8FAFD] text-[#1E1E1E] text-[13px] font-medium border border-[#D0D7E5] shadow-sm transition active:scale-95"
+              <Link
+                to="/admin/directory"
+                className="inline-flex items-center px-4 py-2 rounded-xl bg-[#3B50DF] hover:bg-[#2E3FB8] text-white text-[13px] font-bold shadow-md shadow-[#3B50DF]/20 transition active:scale-95"
               >
-                <FileSpreadsheet size={14} className="mr-1.5 text-[#3B50DF]" />
-                <span>Open Google Sheet</span>
-                <ExternalLink size={12} className="ml-1 text-[#6C757D]" />
-              </a>
-
-              <button
-                type="button"
-                disabled={syncing}
-                onClick={handleSyncToSheets}
-                className="inline-flex items-center px-4 py-2 rounded-xl bg-[#3B50DF] hover:bg-[#2E3FB8] text-white text-[13px] font-bold shadow-md shadow-[#3B50DF]/20 transition active:scale-95 disabled:opacity-50"
-              >
-                <RefreshCw size={14} className={`mr-1.5 ${syncing ? 'animate-spin' : ''}`} />
-                <span>{syncing ? 'Synchronizing...' : 'Sync MongoDB → Sheet'}</span>
-              </button>
+                <FileSpreadsheet size={14} className="mr-1.5" />
+                <span>Go to Student Directory Export</span>
+              </Link>
             </div>
           </div>
 
           <div className="p-4 rounded-xl bg-[#F8FAFC] border border-[#E2E8F0] space-y-2.5 text-[13px] text-[#1E1E1E]">
             <span className="text-[10px] text-[#6C757D] uppercase font-bold tracking-wider block">
-              Synchronization Rules & Schema
+              Placement Export Architecture
             </span>
             <ul className="space-y-1.5 leading-relaxed list-disc list-inside text-xs text-[#1E1E1E]">
-              <li><strong>Authoritative Truth:</strong> MongoDB Atlas is the primary database.</li>
-              <li><strong>Operational Copy:</strong> Google Sheets updates sync via secure backend API.</li>
-              <li><strong>Sync Key:</strong> Students matched strictly by <code>Roll Number</code>.</li>
-              <li><strong>Auto CGPA:</strong> Recalculated automatically on all sheet imports.</li>
-              <li><strong>Data Safety:</strong> Passwords, user IDs, and verification history are never overwritten.</li>
+              <li><strong>Authoritative Truth:</strong> MongoDB is the singular, verified system of record.</li>
+              <li><strong>Zero Cloud Sheet Dependency:</strong> No external sheet connection needed.</li>
+              <li><strong>Deterministic Sorting:</strong> Branch &rarr; Batch &rarr; Roll Number hierarchy.</li>
+              <li><strong>Dynamic Placement Custom Fields:</strong> Custom question answers export as dedicated columns.</li>
+              <li><strong>Audit Compliance:</strong> Every exported report generation is permanently logged in Audit Trail.</li>
             </ul>
           </div>
         </div>

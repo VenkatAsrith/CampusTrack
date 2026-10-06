@@ -9,11 +9,6 @@ import {
   ChevronRight, 
   Loader2,
   X,
-  FileSpreadsheet,
-  RefreshCw,
-  ExternalLink,
-  CheckCircle,
-  AlertCircle,
   FileText,
   Download
 } from 'lucide-react';
@@ -102,8 +97,6 @@ const AdminDirectory: React.FC = () => {
   );
 
   const location = useLocation();
-  const [syncLoading, setSyncLoading] = useState(false);
-  const [syncStatusMsg, setSyncStatusMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [yearStats, setYearStats] = useState<any | null>(null);
 
   // Sync state with URL params & fetch Year-Wise KPI metrics (Part 9 & 13)
@@ -130,26 +123,6 @@ const AdminDirectory: React.FC = () => {
       setShowExportModal(true);
     }
   }, [location.search]);
-
-  const handleSyncToSheets = async () => {
-    setSyncLoading(true);
-    setSyncStatusMsg(null);
-    try {
-      const res = await api.get('/sync/google-sheets/students');
-      setSyncStatusMsg({
-        type: 'success',
-        text: `Successfully synced ${res.data.count} student records to Google Sheet!`,
-      });
-      setTimeout(() => setSyncStatusMsg(null), 6000);
-    } catch (err: any) {
-      setSyncStatusMsg({
-        type: 'error',
-        text: err.response?.data?.message || 'Failed to sync MongoDB to Google Sheets',
-      });
-    } finally {
-      setSyncLoading(false);
-    }
-  };
 
   const fetchStudents = async () => {
     setLoading(true);
@@ -259,51 +232,16 @@ const AdminDirectory: React.FC = () => {
         </div>
 
         <div className="relative z-10 flex flex-wrap items-center gap-2.5">
-          <a
-            href="https://docs.google.com/spreadsheets/d/1w2T9SHihyIOdKWXCkYYPu7R_U2ZYqB3j4zhrQjXKQBk/edit"
-            target="_blank"
-            rel="noreferrer"
-            className="inline-flex items-center justify-center px-3.5 py-2.5 text-[13px] font-medium bg-white hover:bg-[#F8FAFD] text-[#1E1E1E] rounded-xl border border-[#D0D7E5] shadow-sm transition-all active:scale-95 shrink-0"
-          >
-            <FileSpreadsheet size={15} className="mr-1.5 text-[#3B50DF]" />
-            <span>Open Google Sheet</span>
-            <ExternalLink size={12} className="ml-1 text-[#6C757D]" />
-          </a>
-
-          <button
-            type="button"
-            disabled={syncLoading}
-            onClick={handleSyncToSheets}
-            className="inline-flex items-center justify-center px-3.5 py-2.5 text-[13px] font-medium bg-[#EEF2FF] hover:bg-[#E0E7FE] text-[#3B50DF] rounded-xl border border-[#D9E1FC] shadow-sm transition-all active:scale-95 shrink-0 disabled:opacity-50"
-          >
-            <RefreshCw size={14} className={`mr-1.5 ${syncLoading ? 'animate-spin' : ''}`} />
-            <span>{syncLoading ? 'Syncing...' : 'Sync to Sheet'}</span>
-          </button>
-
           <button
             onClick={() => setShowExportModal(true)}
             className="flex items-center justify-center px-4 py-2.5 text-[13px] font-bold bg-[#3B50DF] hover:bg-[#2E3FB8] text-white rounded-xl shadow-md shadow-[#3B50DF]/20 border border-transparent transition-all active:scale-95 shrink-0"
           >
             <FileDown size={15} className="mr-1.5" />
-            <span>Excel / Sheets Export</span>
+            <span>Download Excel Export</span>
           </button>
         </div>
       </div>
 
-      {/* Sync Status Banner */}
-      {syncStatusMsg && (
-        <div className={`p-4 rounded-xl text-xs font-bold flex items-center justify-between animate-in fade-in duration-200 border ${
-          syncStatusMsg.type === 'success' 
-            ? 'bg-[#EEF2FF] border-[#C7D2FE] text-[#3B50DF]' 
-            : 'bg-rose-50 border-rose-200 text-rose-700'
-        }`}>
-          <div className="flex items-center space-x-2">
-            {syncStatusMsg.type === 'success' ? <CheckCircle size={16} /> : <AlertCircle size={16} />}
-            <span>{syncStatusMsg.text}</span>
-          </div>
-          <button onClick={() => setSyncStatusMsg(null)} className="text-[#6C757D] hover:text-[#1E1E1E]">✕</button>
-        </div>
-      )}
 
       {/* Year-Wise Dashboard Metrics (Part 9 Specification) */}
       {yearStats && (

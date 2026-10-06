@@ -124,7 +124,7 @@ const SemesterPromotion: React.FC = () => {
             Semester Promotion & Year Transition
           </h1>
           <p className="text-[#6C757D] text-xs mt-1 max-w-2xl">
-            Promote an entire cohort of students sequentially between academic semesters. When crossing from an even semester (1-2, 2-2, 3-2), students are automatically transitioned into the next academic year across the database and Google Sheets.
+            Promote an entire cohort of students sequentially between academic semesters. When crossing from an even semester (1-2, 2-2, 3-2), students are automatically transitioned into the next academic year across the verified institutional database.
           </p>
         </div>
       </div>
@@ -286,10 +286,10 @@ const SemesterPromotion: React.FC = () => {
               View Promoted Students (Year {promotionResult.toYear})
             </button>
             <button
-              onClick={() => navigate('/admin/directory?tab=export')}
+              onClick={() => navigate('/admin/directory')}
               className="px-4 py-2 bg-white border border-emerald-300 text-emerald-800 hover:bg-emerald-100 rounded-xl text-xs font-bold transition"
             >
-              Open Google Sheets Sync Panel
+              Export Directory to Excel
             </button>
           </div>
         </div>

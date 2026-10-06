@@ -389,20 +389,20 @@ const AdminSidebar: React.FC<SidebarProps> = ({ onClose, isCollapsed = false, on
           </NavLink>
 
           <NavLink
-            to="/admin/directory?tab=export"
+            to="/admin/directory"
             onClick={onClose}
-            title={isCollapsed ? 'Excel & Sheets Sync' : undefined}
+            title={isCollapsed ? 'Institutional Excel Exports' : undefined}
             className={`flex items-center rounded-xl text-[13px] font-medium transition-all ${
               isCollapsed ? 'justify-center p-2.5' : 'justify-between px-3 py-2'
             } ${
-              isCurrentPath('/admin/directory?tab=export')
+              location.pathname === '/admin/directory' && location.search.includes('export')
                 ? 'bg-[#3B50DF] text-white font-semibold shadow-md shadow-[#3B50DF]/30'
                 : 'text-[#E0E4FC] hover:bg-[#1F2752] hover:text-white'
             }`}
           >
             <div className={`flex items-center ${isCollapsed ? 'justify-center' : 'space-x-3'}`}>
               <FileSpreadsheet size={18} className="shrink-0" />
-              {!isCollapsed && <span className="truncate">Excel & Sheets Sync</span>}
+              {!isCollapsed && <span className="truncate">Institutional Exports</span>}
             </div>
           </NavLink>
 

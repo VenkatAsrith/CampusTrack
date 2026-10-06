@@ -22,7 +22,6 @@
     "zod": "^3.22.4"
   },
   "devDependencies": {
-    "@rolldown/binding-win32-x64-msvc": "^1.2.0",
     "@types/node": "^20.12.7",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",

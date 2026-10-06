@@ -84,7 +84,30 @@ const TpoAnnouncements: React.FC = () => {
     fetchTpoAnnouncements();
   }, []);
 
+  // Restore saved draft on mount
+  useEffect(() => {
+    try {
+      const draft = localStorage.getItem('campustrack_tpo_drive_draft');
+      if (draft && !editingItem) {
+        const d = JSON.parse(draft);
+        if (d.companyName || d.title || d.jobRole) {
+          setFormData((prev) => ({ ...prev, ...d }));
+        }
+      }
+    } catch {}
+  }, []);
+
+  // Auto-save drive creation draft locally
+  useEffect(() => {
+    if (!editingItem && (formData.companyName || formData.title || formData.jobRole)) {
+      try {
+        localStorage.setItem('campustrack_tpo_drive_draft', JSON.stringify(formData));
+      } catch {}
+    }
+  }, [formData, editingItem]);
+
   const resetForm = () => {
+    localStorage.removeItem('campustrack_tpo_drive_draft');
     setFormData({
       title: '',
       description: '',
