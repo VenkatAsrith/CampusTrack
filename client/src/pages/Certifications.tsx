@@ -5,6 +5,7 @@ import type { Certification } from '../types';
 import StatusBadge from '../components/StatusBadge';
 import ConfirmDialog from '../components/ConfirmDialog';
 import FileUploader from '../components/FileUploader';
+import { getDocumentViewUrl } from '../utils/documentUrl';
 
 const Certifications: React.FC = () => {
   const [records, setRecords] = useState<Certification[]>([]);
@@ -220,7 +221,7 @@ const Certifications: React.FC = () => {
                       </a>
                     )}
                     {r.certificateFile && (
-                      <a href={`/api/v1/documents/${r.certificateFile._id}`} target="_blank" rel="noopener noreferrer" className="text-brand-450 hover:text-brand-355 underline font-semibold">
+                      <a href={getDocumentViewUrl(r.certificateFile._id)} target="_blank" rel="noopener noreferrer" className="text-brand-450 hover:text-brand-355 underline font-semibold">
                         View Certificate
                       </a>
                     )}

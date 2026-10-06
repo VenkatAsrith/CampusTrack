@@ -10,7 +10,10 @@ import {
   Building2, 
   Mail, 
   Lock, 
-  Layers 
+  Layers,
+  HardDrive,
+  Cloud,
+  Sparkles
 } from 'lucide-react';
 import api from '../services/api';
 
@@ -24,17 +27,40 @@ interface SyncStatus {
   syncSecretConfigured: boolean;
 }
 
+interface StorageStats {
+  summary: {
+    totalFiles: number;
+    totalStorageBytes: number;
+    totalStorageMB: string;
+    totalOriginalMB: string;
+    bandwidthSavedMB: string;
+    savedPercent: number;
+  };
+  breakdown: Array<{
+    type: string;
+    count: number;
+    sizeBytes: number;
+    sizeMB: string;
+  }>;
+  cloudinaryAccount?: any;
+}
+
 const TpoSettings: React.FC = () => {
   const [status, setStatus] = useState<SyncStatus | null>(null);
+  const [storageStats, setStorageStats] = useState<StorageStats | null>(null);
   const [syncing, setSyncing] = useState(false);
   const [banner, setBanner] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
 
   const fetchStatus = async () => {
     try {
-      const res = await api.get('/sync/status');
-      setStatus(res.data);
+      const [syncRes, storageRes] = await Promise.allSettled([
+        api.get('/sync/status'),
+        api.get('/documents/storage/stats')
+      ]);
+      if (syncRes.status === 'fulfilled') setStatus(syncRes.value.data);
+      if (storageRes.status === 'fulfilled') setStorageStats(storageRes.value.data.data);
     } catch (err: any) {
-      console.error('Failed to fetch sync status', err);
+      console.error('Failed to fetch settings/storage status', err);
     }
   };
 
@@ -233,6 +259,99 @@ const TpoSettings: React.FC = () => {
               All downloadable <code>.xlsx</code> corporate placement reports are sorted deterministically by: <strong>Branch &rarr; Year &rarr; Roll Number</strong>.
             </p>
           </div>
+        </div>
+      </div>
+
+      {/* 4. Cloudinary Production File Storage & Optimization Monitoring */}
+      <div className="bg-white border border-[#E5E9F2] rounded-2xl p-6 shadow-sm space-y-5">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-[#E5E9F2] pb-3">
+          <h2 className="text-[15px] font-semibold text-[#1E1E1E] uppercase tracking-wider flex items-center">
+            <HardDrive size={16} className="mr-2 text-[#3B50DF]" />
+            4. Cloudinary File Storage & Optimization
+          </h2>
+          <span className="inline-flex items-center text-xs font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-full w-fit">
+            <Cloud size={13} className="mr-1 text-emerald-600" />
+            Cloudinary Production Active
+          </span>
+        </div>
+
+        {/* Metrics Grid */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="p-4 rounded-xl bg-[#F8FAFC] border border-[#E2E8F0] space-y-1">
+            <span className="text-[10px] text-[#6C757D] uppercase font-bold tracking-wider block">
+              Total Documents
+            </span>
+            <p className="text-xl font-extrabold text-[#1E1E1E]">
+              {storageStats?.summary?.totalFiles ?? 0}
+            </p>
+            <p className="text-[11px] text-[#6C757D]">Stored across all categories</p>
+          </div>
+
+          <div className="p-4 rounded-xl bg-[#F8FAFC] border border-[#E2E8F0] space-y-1">
+            <span className="text-[10px] text-[#6C757D] uppercase font-bold tracking-wider block">
+              Cloud Storage Used
+            </span>
+            <p className="text-xl font-extrabold text-[#3B50DF]">
+              {storageStats?.summary?.totalStorageMB ?? '0.00'} MB
+            </p>
+            <p className="text-[11px] text-[#6C757D]">Compressed binary assets</p>
+          </div>
+
+          <div className="p-4 rounded-xl bg-[#F8FAFC] border border-[#E2E8F0] space-y-1">
+            <span className="text-[10px] text-[#6C757D] uppercase font-bold tracking-wider block flex items-center">
+              <Sparkles size={11} className="mr-1 text-emerald-600" />
+              Bandwidth Saved
+            </span>
+            <p className="text-xl font-extrabold text-emerald-700">
+              {storageStats?.summary?.bandwidthSavedMB ?? '0.00'} MB
+            </p>
+            <p className="text-[11px] text-emerald-700 font-semibold">
+              {storageStats?.summary?.savedPercent ?? 0}% efficiency gain
+            </p>
+          </div>
+
+          <div className="p-4 rounded-xl bg-[#F8FAFC] border border-[#E2E8F0] space-y-1">
+            <span className="text-[10px] text-[#6C757D] uppercase font-bold tracking-wider block">
+              Security Level
+            </span>
+            <p className="text-sm font-extrabold text-emerald-700">
+              AES-256 + Signed URLs
+            </p>
+            <p className="text-[11px] text-[#6C757D]">Private student access control</p>
+          </div>
+        </div>
+
+        {/* Breakdown by Type */}
+        {storageStats && storageStats.breakdown && storageStats.breakdown.length > 0 && (
+          <div className="space-y-2 pt-2">
+            <span className="text-xs font-bold text-[#1E1E1E] uppercase tracking-wider block">
+              Storage Allocation Breakdown by Category
+            </span>
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
+              {storageStats.breakdown.map((item) => (
+                <div key={item.type} className="p-3 bg-white border border-[#E2E8F0] rounded-xl text-xs space-y-1">
+                  <div className="flex items-center justify-between">
+                    <span className="font-bold text-[#1E1E1E] capitalize">{item.type.replace('_', ' ')}</span>
+                    <span className="text-[11px] font-mono text-[#6C757D]">{item.count} files</span>
+                  </div>
+                  <div className="text-sm font-extrabold text-[#3B50DF]">{item.sizeMB} MB</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Architecture Standards Summary */}
+        <div className="p-4 rounded-xl bg-[#EEF2FF]/60 border border-[#D9E1FC] space-y-2 text-xs text-[#1E1E1E]">
+          <span className="font-bold text-[#3B50DF] block">
+            Cloudinary Production Architecture Rules
+          </span>
+          <ul className="space-y-1 list-disc list-inside text-[#1E1E1E]">
+            <li><strong>Cloudinary:</strong> Stores actual binary files (Profile photos, raw resumes, certificates, proof).</li>
+            <li><strong>MongoDB Atlas:</strong> Stores document metadata (Cloudinary Public ID, MIME type, size, SHA-256 hash).</li>
+            <li><strong>Google Sheets / Excel:</strong> Synchronizes delivery URLs / references only (never binary blobs).</li>
+            <li><strong>Deduplication:</strong> Cryptographic SHA-256 hashing avoids duplicate uploads for identical files.</li>
+          </ul>
         </div>
       </div>
     </div>

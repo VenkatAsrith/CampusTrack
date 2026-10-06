@@ -5,6 +5,7 @@ import type { Achievement } from '../types';
 import StatusBadge from '../components/StatusBadge';
 import ConfirmDialog from '../components/ConfirmDialog';
 import FileUploader from '../components/FileUploader';
+import { getDocumentViewUrl } from '../utils/documentUrl';
 
 const Achievements: React.FC = () => {
   const [records, setRecords] = useState<Achievement[]>([]);
@@ -211,7 +212,7 @@ const Achievements: React.FC = () => {
                 <div className="mt-6 pt-4 border-t border-[#E5E9F2]/80 flex items-center justify-between">
                   <div className="flex space-x-3 text-xs">
                     {r.proofDocument && (
-                      <a href={`/api/v1/documents/${r.proofDocument._id}`} target="_blank" rel="noopener noreferrer" className="text-brand-450 hover:text-brand-350 underline font-semibold">
+                      <a href={getDocumentViewUrl(r.proofDocument._id)} target="_blank" rel="noopener noreferrer" className="text-brand-450 hover:text-brand-350 underline font-semibold">
                         View Supporting Certificate
                       </a>
                     )}

@@ -5,6 +5,7 @@ import type { NPTELRecord } from '../types';
 import StatusBadge from '../components/StatusBadge';
 import ConfirmDialog from '../components/ConfirmDialog';
 import FileUploader from '../components/FileUploader';
+import { getDocumentViewUrl } from '../utils/documentUrl';
 
 const NPTELRecords: React.FC = () => {
   const [records, setRecords] = useState<NPTELRecord[]>([]);
@@ -233,7 +234,7 @@ const NPTELRecords: React.FC = () => {
                 <div className="mt-6 pt-4 border-t border-[#E5E9F2]/80 flex items-center justify-between">
                   <div className="flex space-x-3 text-xs">
                     {r.certificate && (
-                      <a href={`/api/v1/documents/${r.certificate._id}`} target="_blank" rel="noopener noreferrer" className="text-brand-450 hover:text-brand-350 underline font-semibold">
+                      <a href={getDocumentViewUrl(r.certificate._id)} target="_blank" rel="noopener noreferrer" className="text-brand-450 hover:text-brand-350 underline font-semibold">
                         View Course Certificate
                       </a>
                     )}

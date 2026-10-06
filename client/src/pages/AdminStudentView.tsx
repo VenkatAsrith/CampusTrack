@@ -4,10 +4,17 @@ import {
   ArrowLeft, Github,
   Code2, FolderGit2, Briefcase, Award, BookOpen, Trophy, Sparkles,
   User, Users2, Home, GraduationCap, ExternalLink,
-  KeyRound, Lock, CheckCircle2, AlertTriangle
+  KeyRound, Lock, CheckCircle2, AlertTriangle, FileText, Globe, Linkedin, Paperclip,
+  Download, Eye
 } from 'lucide-react';
 import api from '../services/api';
 import StatusBadge from '../components/StatusBadge';
+import { 
+  getDocumentDownloadUrl, 
+  resolveDocumentViewUrl, 
+  resolveDocumentDownloadUrl 
+} from '../utils/documentUrl';
+import DocumentPreviewModal from '../components/DocumentPreviewModal';
 
 const AdminStudentView: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -16,6 +23,36 @@ const AdminStudentView: React.FC = () => {
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('projects');
+
+  // Document online preview modal state
+  const [previewModal, setPreviewModal] = useState<{
+    isOpen: boolean;
+    title: string;
+    documentUrl: string;
+    downloadUrl?: string;
+    fileName?: string;
+    fileSize?: number;
+    documentType?: string;
+  }>({
+    isOpen: false,
+    title: '',
+    documentUrl: '',
+  });
+
+  const openDocumentPreview = (title: string, docIdOrLink?: string, fileName?: string, fileSize?: number, documentType?: string) => {
+    if (!docIdOrLink) return;
+    const viewUrl = resolveDocumentViewUrl(docIdOrLink, data?.documents);
+    const downloadUrl = resolveDocumentDownloadUrl(docIdOrLink, data?.documents);
+    setPreviewModal({
+      isOpen: true,
+      title: title || fileName || 'Document Preview',
+      documentUrl: viewUrl,
+      downloadUrl: downloadUrl,
+      fileName: fileName || title,
+      fileSize,
+      documentType,
+    });
+  };
 
   // Verification dialog states
   const [reviewRecord, setReviewRecord] = useState<{ record: any; module: string } | null>(null);
@@ -124,7 +161,7 @@ const AdminStudentView: React.FC = () => {
     );
   }
 
-  const { student, projects = [], internships = [], certifications = [], nptel = [], hackathons = [], achievements = [], codingProfiles = [] } = data;
+  const { student, projects = [], internships = [], certifications = [], nptel = [], hackathons = [], achievements = [], codingProfiles = [], documents = [] } = data;
 
   const tabs = [
     { id: 'projects', name: 'Projects', count: projects.length, icon: <FolderGit2 size={16} /> },
@@ -134,6 +171,7 @@ const AdminStudentView: React.FC = () => {
     { id: 'hackathons', name: 'Hackathons', count: hackathons.length, icon: <Trophy size={16} /> },
     { id: 'achievements', name: 'Achievements', count: achievements.length, icon: <Sparkles size={16} /> },
     { id: 'coding', name: 'Coding Profiles', count: codingProfiles.length, icon: <Code2 size={16} /> },
+    { id: 'documents', name: 'Document Vault', count: documents.length, icon: <FileText size={16} /> },
   ];
 
   return (
@@ -150,8 +188,19 @@ const AdminStudentView: React.FC = () => {
       {/* Top Student Banner */}
       <div className="bg-white border border-[#E5E9F2] rounded-2xl p-6 shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-6 relative overflow-hidden">
         <div className="flex items-center space-x-4 relative z-10">
-          <div className="h-14 w-14 bg-[#EEF2FF] border border-[#D9E1FC] text-[#3B50DF] font-black text-xl rounded-2xl flex items-center justify-center shadow-sm">
-            {student.fullName.split(' ').map((n: string) => n[0]).join('').substring(0, 2)}
+          <div className="h-16 w-16 bg-[#EEF2FF] border-2 border-white text-[#3B50DF] font-black text-xl rounded-2xl flex items-center justify-center shadow-md shadow-[#3B50DF]/15 overflow-hidden shrink-0">
+            {student.profilePhoto ? (
+              <img 
+                src={student.profilePhoto} 
+                alt={student.fullName} 
+                className="h-full w-full object-cover"
+                onError={(e) => {
+                  (e.target as HTMLElement).style.display = 'none';
+                }}
+              />
+            ) : (
+              student.fullName.split(' ').map((n: string) => n[0]).join('').substring(0, 2)
+            )}
           </div>
           <div>
             <h1 className="text-[24px] sm:text-[28px] font-extrabold text-[#1E1E1E] tracking-tight">{student.fullName}</h1>
@@ -180,6 +229,31 @@ const AdminStudentView: React.FC = () => {
             <span className="text-[22px] font-bold text-[#3B50DF]">{student.profileCompletion}%</span>
           </div>
           <div className="h-8 w-px bg-[#E5E9F2]" />
+          
+          {/* Quick Resume Actions for TPO */}
+          {student.resumeLink && (
+            <div className="flex items-center space-x-1.5">
+              <button
+                type="button"
+                onClick={() => openDocumentPreview(`${student.fullName} - Resume`, student.resumeLink, `${student.rollNumber}_Resume.pdf`, undefined, 'resume')}
+                className="flex items-center space-x-1.5 px-3.5 py-2 bg-[#3B50DF] hover:bg-[#2E3FB8] text-white rounded-xl text-xs font-bold shadow-sm transition active:scale-95"
+                title="Preview resume online inside browser"
+              >
+                <Eye size={14} />
+                <span>View Resume</span>
+              </button>
+              <a
+                href={resolveDocumentDownloadUrl(student.resumeLink, data?.documents)}
+                download={`${student.rollNumber}_Resume.pdf`}
+                className="flex items-center space-x-1 px-2.5 py-2 bg-white border border-[#D0D7E5] hover:border-[#3B50DF] hover:bg-[#EEF2FF] text-[#1E1E1E] rounded-xl text-xs font-bold shadow-sm transition active:scale-95"
+                title="Download resume directly to disk"
+              >
+                <Download size={13} />
+                <span className="hidden sm:inline">Download</span>
+              </a>
+            </div>
+          )}
+
           <button
             type="button"
             onClick={() => {
@@ -263,6 +337,129 @@ const AdminStudentView: React.FC = () => {
         </div>
       </div>
 
+      {/* Professional Portfolio & Institutional Documents Vault */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        {/* Professional & Social Links */}
+        <div className="p-4 bg-white border border-[#E5E9F2] rounded-2xl shadow-sm space-y-3">
+          <h3 className="text-xs font-bold text-[#1E1E1E] uppercase tracking-wider flex items-center">
+            <Globe size={14} className="mr-1.5 text-[#3B50DF]" /> Professional & Portfolio Profiles
+          </h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+            {student.github ? (
+              <a href={student.github} target="_blank" rel="noopener noreferrer" className="flex items-center space-x-2 p-2.5 rounded-xl border border-[#E2E8F0] hover:border-[#3B50DF] hover:bg-[#EEF2FF]/50 text-[#1E1E1E] transition">
+                <Github size={14} className="text-[#3B50DF]" />
+                <span className="truncate font-semibold">GitHub Profile</span>
+                <ExternalLink size={11} className="ml-auto text-[#6C757D]" />
+              </a>
+            ) : (
+              <div className="p-2.5 rounded-xl border border-[#E2E8F0] text-[#94A3B8] flex items-center space-x-2">
+                <Github size={14} /> <span>GitHub: Not provided</span>
+              </div>
+            )}
+
+            {student.linkedin ? (
+              <a href={student.linkedin} target="_blank" rel="noopener noreferrer" className="flex items-center space-x-2 p-2.5 rounded-xl border border-[#E2E8F0] hover:border-[#3B50DF] hover:bg-[#EEF2FF]/50 text-[#1E1E1E] transition">
+                <Linkedin size={14} className="text-[#3B50DF]" />
+                <span className="truncate font-semibold">LinkedIn Profile</span>
+                <ExternalLink size={11} className="ml-auto text-[#6C757D]" />
+              </a>
+            ) : (
+              <div className="p-2.5 rounded-xl border border-[#E2E8F0] text-[#94A3B8] flex items-center space-x-2">
+                <Linkedin size={14} /> <span>LinkedIn: Not provided</span>
+              </div>
+            )}
+
+            {student.portfolio ? (
+              <a href={student.portfolio} target="_blank" rel="noopener noreferrer" className="flex items-center space-x-2 p-2.5 rounded-xl border border-[#E2E8F0] hover:border-[#3B50DF] hover:bg-[#EEF2FF]/50 text-[#1E1E1E] transition sm:col-span-2">
+                <Globe size={14} className="text-[#3B50DF]" />
+                <span className="truncate font-semibold">Personal Portfolio: {student.portfolio}</span>
+                <ExternalLink size={11} className="ml-auto text-[#6C757D]" />
+              </a>
+            ) : null}
+          </div>
+        </div>
+
+        {/* Cloud Documents Vault */}
+        <div className="p-4 bg-white border border-[#E5E9F2] rounded-2xl shadow-sm space-y-3">
+          <div className="flex items-center justify-between">
+            <h3 className="text-xs font-bold text-[#1E1E1E] uppercase tracking-wider flex items-center">
+              <FileText size={14} className="mr-1.5 text-[#3B50DF]" /> Institutional Documents Vault
+            </h3>
+            <span className="text-[10px] font-bold text-[#3B50DF] bg-[#EEF2FF] px-2 py-0.5 rounded-md">
+              Cloudinary Storage
+            </span>
+          </div>
+
+          <div className="space-y-2">
+            {student.resumeLink && (
+              <div className="flex items-center justify-between p-2.5 rounded-xl border border-[#D9E1FC] bg-[#EEF2FF]/40 text-xs">
+                <div className="flex items-center space-x-2">
+                  <FileText size={15} className="text-[#3B50DF]" />
+                  <div>
+                    <span className="font-bold text-[#1E1E1E] block">Official Placement Resume</span>
+                    <span className="text-[10px] text-[#6C757D]">Verified PDF Document</span>
+                  </div>
+                </div>
+                <div className="flex items-center space-x-1.5">
+                  <button
+                    type="button"
+                    onClick={() => openDocumentPreview(`${student.fullName} - Resume`, student.resumeLink, `${student.rollNumber}_Resume.pdf`, undefined, 'resume')}
+                    className="px-2.5 py-1 bg-[#3B50DF] text-white rounded-lg text-[11px] font-bold hover:bg-[#2E3FB8] flex items-center space-x-1 transition active:scale-95 shadow-sm"
+                    title="View resume online"
+                  >
+                    <Eye size={11} />
+                    <span>View</span>
+                  </button>
+                  <a
+                    href={resolveDocumentDownloadUrl(student.resumeLink, data?.documents)}
+                    download={`${student.rollNumber}_Resume.pdf`}
+                    className="p-1 bg-white border border-[#D0D7E5] hover:border-[#3B50DF] hover:bg-[#EEF2FF] text-[#475569] hover:text-[#3B50DF] rounded-lg text-[11px] font-bold transition shadow-sm"
+                    title="Download resume file"
+                  >
+                    <Download size={12} />
+                  </a>
+                </div>
+              </div>
+            )}
+
+            {data?.documents && data.documents.length > 0 ? (
+              <div className="space-y-1.5 max-h-36 overflow-y-auto pr-1">
+                {data.documents.map((doc: any) => (
+                  <div key={doc._id} className="flex items-center justify-between p-2 rounded-lg border border-[#E2E8F0] hover:bg-[#F8FAFC] text-xs">
+                    <div className="flex items-center space-x-2 truncate">
+                      <FileText size={13} className="text-[#6C757D] shrink-0" />
+                      <span className="truncate font-medium text-[#1E1E1E]">{doc.originalName}</span>
+                      <span className="text-[10px] uppercase font-bold text-[#3B50DF] bg-[#EEF2FF] px-1.5 py-0.2 rounded shrink-0">
+                        {doc.documentType?.replace('_', ' ')}
+                      </span>
+                    </div>
+                    <div className="flex items-center space-x-1 shrink-0 ml-2">
+                      <button
+                        type="button"
+                        onClick={() => openDocumentPreview(doc.originalName || doc.filename, doc._id, doc.originalName, doc.size, doc.documentType)}
+                        className="text-[#3B50DF] hover:underline font-bold text-[11px] px-1.5 py-0.5 rounded hover:bg-[#EEF2FF]"
+                      >
+                        View
+                      </button>
+                      <a
+                        href={getDocumentDownloadUrl(doc._id)}
+                        download={doc.originalName || doc.filename}
+                        className="text-[#64748B] hover:text-[#3B50DF] p-1 rounded hover:bg-[#EEF2FF]"
+                        title="Download file"
+                      >
+                        <Download size={11} />
+                      </a>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : !student.resumeLink ? (
+              <p className="text-xs text-[#94A3B8] italic py-2">No documents uploaded yet by this student.</p>
+            ) : null}
+          </div>
+        </div>
+      </div>
+
       {/* Semester Percentages Grid */}
       <div className="p-5 bg-white border border-[#E5E9F2] rounded-2xl shadow-sm space-y-3">
         <h3 className="text-xs font-bold text-[#1E1E1E] uppercase tracking-wider flex items-center justify-between">
@@ -336,9 +533,28 @@ const AdminStudentView: React.FC = () => {
                       Tech: {item.technologies.join(', ')} • Role: {item.studentRole}
                     </div>
                     {item.githubUrl && (
-                      <a href={item.githubUrl} target="_blank" rel="noreferrer" className="inline-flex items-center text-xs font-bold text-[#3B50DF] hover:underline pt-1">
+                      <a href={item.githubUrl} target="_blank" rel="noreferrer" className="inline-flex items-center text-xs font-bold text-[#3B50DF] hover:underline pt-1 mr-3">
                         <Github size={12} className="mr-1" /> View GitHub Repository
                       </a>
+                    )}
+                    {item.proofDocument && (
+                      <div className="inline-flex items-center space-x-1 pt-1">
+                        <button
+                          type="button"
+                          onClick={() => openDocumentPreview(`Project Proof - ${item.projectName}`, item.proofDocument)}
+                          className="inline-flex items-center space-x-1 px-2.5 py-1 bg-[#EEF2FF] hover:bg-[#3B50DF] text-[#3B50DF] hover:text-white border border-[#D9E1FC] rounded-lg text-xs font-semibold transition"
+                        >
+                          <Eye size={12} />
+                          <span>View Proof</span>
+                        </button>
+                        <a
+                          href={resolveDocumentDownloadUrl(item.proofDocument, data?.documents)}
+                          className="p-1 text-[#6C757D] hover:text-[#3B50DF] rounded hover:bg-[#EEF2FF] transition"
+                          title="Download proof"
+                        >
+                          <Download size={13} />
+                        </a>
+                      </div>
                     )}
                   </div>
                   <div className="flex items-center space-x-2 shrink-0">
@@ -378,6 +594,46 @@ const AdminStudentView: React.FC = () => {
                     <p className="text-xs text-[#6C757D]">
                       Duration: {item.duration} • Mode: {item.mode} • Stipend: {item.stipend ? `₹${item.stipend}/mo` : 'Unpaid'}
                     </p>
+                    <div className="flex flex-wrap items-center gap-2 pt-1">
+                      {item.certificate && (
+                        <div className="inline-flex items-center space-x-1">
+                          <button
+                            type="button"
+                            onClick={() => openDocumentPreview(`Internship Certificate - ${item.companyName}`, item.certificate)}
+                            className="inline-flex items-center space-x-1 px-2.5 py-1 bg-[#EEF2FF] hover:bg-[#3B50DF] text-[#3B50DF] hover:text-white border border-[#D9E1FC] rounded-lg text-xs font-semibold transition"
+                          >
+                            <Eye size={12} />
+                            <span>View Certificate</span>
+                          </button>
+                          <a
+                            href={resolveDocumentDownloadUrl(item.certificate, data?.documents)}
+                            className="p-1 text-[#6C757D] hover:text-[#3B50DF] rounded hover:bg-[#EEF2FF] transition"
+                            title="Download certificate"
+                          >
+                            <Download size={13} />
+                          </a>
+                        </div>
+                      )}
+                      {item.offerLetter && (
+                        <div className="inline-flex items-center space-x-1">
+                          <button
+                            type="button"
+                            onClick={() => openDocumentPreview(`Offer Letter - ${item.companyName}`, item.offerLetter)}
+                            className="inline-flex items-center space-x-1 px-2.5 py-1 bg-[#F8FAFC] hover:bg-[#3B50DF] text-[#475569] hover:text-white border border-[#E2E8F0] rounded-lg text-xs font-semibold transition"
+                          >
+                            <Eye size={12} />
+                            <span>View Offer Letter</span>
+                          </button>
+                          <a
+                            href={resolveDocumentDownloadUrl(item.offerLetter, data?.documents)}
+                            className="p-1 text-[#6C757D] hover:text-[#3B50DF] rounded hover:bg-[#EEF2FF] transition"
+                            title="Download offer letter"
+                          >
+                            <Download size={13} />
+                          </a>
+                        </div>
+                      )}
+                    </div>
                   </div>
                   <div className="flex items-center space-x-2 shrink-0">
                     <button
@@ -416,6 +672,25 @@ const AdminStudentView: React.FC = () => {
                     <p className="text-xs text-[#6C757D]">
                       Issue Date: {new Date(item.issueDate).toLocaleDateString()} {item.credentialId && `• ID: ${item.credentialId}`}
                     </p>
+                    {item.certificateFile && (
+                      <div className="flex items-center space-x-1 pt-1">
+                        <button
+                          type="button"
+                          onClick={() => openDocumentPreview(`Certificate - ${item.courseName}`, item.certificateFile)}
+                          className="inline-flex items-center space-x-1 px-2.5 py-1 bg-[#EEF2FF] hover:bg-[#3B50DF] text-[#3B50DF] hover:text-white border border-[#D9E1FC] rounded-lg text-xs font-semibold transition"
+                        >
+                          <Eye size={12} />
+                          <span>View Certificate</span>
+                        </button>
+                        <a
+                          href={resolveDocumentDownloadUrl(item.certificateFile, data?.documents)}
+                          className="p-1 text-[#6C757D] hover:text-[#3B50DF] rounded hover:bg-[#EEF2FF] transition"
+                          title="Download certificate"
+                        >
+                          <Download size={13} />
+                        </a>
+                      </div>
+                    )}
                   </div>
                   <div className="flex items-center space-x-2 shrink-0">
                     <button
@@ -454,6 +729,25 @@ const AdminStudentView: React.FC = () => {
                     <p className="text-xs text-[#6C757D]">
                       Score: {item.finalScore}% • Timeline: {item.timeline}
                     </p>
+                    {item.certificate && (
+                      <div className="flex items-center space-x-1 pt-1">
+                        <button
+                          type="button"
+                          onClick={() => openDocumentPreview(`NPTEL Certificate - ${item.courseName}`, item.certificate)}
+                          className="inline-flex items-center space-x-1 px-2.5 py-1 bg-[#EEF2FF] hover:bg-[#3B50DF] text-[#3B50DF] hover:text-white border border-[#D9E1FC] rounded-lg text-xs font-semibold transition"
+                        >
+                          <Eye size={12} />
+                          <span>View Certificate</span>
+                        </button>
+                        <a
+                          href={resolveDocumentDownloadUrl(item.certificate, data?.documents)}
+                          className="p-1 text-[#6C757D] hover:text-[#3B50DF] rounded hover:bg-[#EEF2FF] transition"
+                          title="Download certificate"
+                        >
+                          <Download size={13} />
+                        </a>
+                      </div>
+                    )}
                   </div>
                   <div className="flex items-center space-x-2 shrink-0">
                     <button
@@ -492,6 +786,25 @@ const AdminStudentView: React.FC = () => {
                     <p className="text-xs text-[#6C757D]">
                       Organizer: {item.organizer} • Project: {item.projectTitle}
                     </p>
+                    {item.certificate && (
+                      <div className="flex items-center space-x-1 pt-1">
+                        <button
+                          type="button"
+                          onClick={() => openDocumentPreview(`Hackathon Certificate - ${item.hackathonName}`, item.certificate)}
+                          className="inline-flex items-center space-x-1 px-2.5 py-1 bg-[#EEF2FF] hover:bg-[#3B50DF] text-[#3B50DF] hover:text-white border border-[#D9E1FC] rounded-lg text-xs font-semibold transition"
+                        >
+                          <Eye size={12} />
+                          <span>View Certificate</span>
+                        </button>
+                        <a
+                          href={resolveDocumentDownloadUrl(item.certificate, data?.documents)}
+                          className="p-1 text-[#6C757D] hover:text-[#3B50DF] rounded hover:bg-[#EEF2FF] transition"
+                          title="Download certificate"
+                        >
+                          <Download size={13} />
+                        </a>
+                      </div>
+                    )}
                   </div>
                   <div className="flex items-center space-x-2 shrink-0">
                     <button
@@ -528,6 +841,25 @@ const AdminStudentView: React.FC = () => {
                       <StatusBadge status={item.verification.status} />
                     </div>
                     <p className="text-xs text-[#6C757D]">{item.description}</p>
+                    {item.proofDocument && (
+                      <div className="flex items-center space-x-1 pt-1">
+                        <button
+                          type="button"
+                          onClick={() => openDocumentPreview(`Achievement Proof - ${item.title}`, item.proofDocument)}
+                          className="inline-flex items-center space-x-1 px-2.5 py-1 bg-[#EEF2FF] hover:bg-[#3B50DF] text-[#3B50DF] hover:text-white border border-[#D9E1FC] rounded-lg text-xs font-semibold transition"
+                        >
+                          <Eye size={12} />
+                          <span>View Proof</span>
+                        </button>
+                        <a
+                          href={resolveDocumentDownloadUrl(item.proofDocument, data?.documents)}
+                          className="p-1 text-[#6C757D] hover:text-[#3B50DF] rounded hover:bg-[#EEF2FF] transition"
+                          title="Download proof"
+                        >
+                          <Download size={13} />
+                        </a>
+                      </div>
+                    )}
                   </div>
                   <div className="flex items-center space-x-2 shrink-0">
                     <button
@@ -576,6 +908,99 @@ const AdminStudentView: React.FC = () => {
             )}
           </div>
         )}
+
+        {/* DOCUMENTS & CREDENTIALS VAULT TAB */}
+        {activeTab === 'documents' && (
+          <div className="space-y-4">
+            <div className="bg-white border border-[#E5E9F2] rounded-2xl p-5 shadow-sm">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+                <div>
+                  <h3 className="text-sm font-bold text-[#1E1E1E] flex items-center space-x-2">
+                    <FileText size={16} className="text-[#3B50DF]" />
+                    <span>Institutional Document & Credentials Vault</span>
+                  </h3>
+                  <p className="text-xs text-[#6C757D] mt-0.5">
+                    Production file storage powered by Cloudinary CDN & MongoDB Atlas metadata tracking.
+                  </p>
+                </div>
+                <span className="px-2.5 py-1 rounded-full text-[11px] font-bold bg-[#EEF2FF] text-[#3B50DF] border border-[#D9E1FC] shrink-0">
+                  {documents.length} Files Stored
+                </span>
+              </div>
+
+              {documents.length === 0 ? (
+                <div className="p-8 text-center text-[#6C757D] text-xs bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl">
+                  No documents or proofs have been uploaded by this student yet.
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  {documents.map((doc: any) => {
+                    const isImg = doc.documentType === 'profile_photo' || doc.mimeType?.startsWith('image/');
+                    const isPdf = doc.mimeType === 'application/pdf' || doc.originalName?.endsWith('.pdf');
+                    return (
+                      <div key={doc._id} className="p-4 bg-white border border-[#E2E8F0] hover:border-[#3B50DF] rounded-xl shadow-sm transition flex items-start justify-between gap-3">
+                        <div className="flex items-start space-x-3 overflow-hidden">
+                          <div className="h-10 w-10 rounded-xl bg-[#EEF2FF] text-[#3B50DF] flex items-center justify-center shrink-0 border border-[#D9E1FC]">
+                            {isImg ? (
+                              doc.cloudinarySecureUrl ? (
+                                <img src={doc.cloudinarySecureUrl} alt="" className="h-full w-full object-cover rounded-xl" />
+                              ) : <User size={18} />
+                            ) : isPdf ? (
+                              <FileText size={18} />
+                            ) : (
+                              <Paperclip size={18} />
+                            )}
+                          </div>
+                          <div className="overflow-hidden">
+                            <h4 className="text-xs font-bold text-[#1E1E1E] truncate" title={doc.originalName || doc.filename}>
+                              {doc.originalName || doc.filename}
+                            </h4>
+                            <div className="flex flex-wrap items-center gap-1.5 mt-1">
+                              <span className="px-1.5 py-0.5 rounded text-[9px] font-bold uppercase bg-[#EEF2FF] text-[#3B50DF] border border-[#D9E1FC]">
+                                {doc.documentType || 'proof'}
+                              </span>
+                              <span className="text-[10px] text-[#6C757D] font-mono">
+                                {(doc.size / 1024).toFixed(1)} KB
+                              </span>
+                              {doc.optimizedSize && doc.originalSize && doc.originalSize > doc.optimizedSize && (
+                                <span className="text-[9px] text-emerald-600 font-bold">
+                                  Saved {Math.round((1 - doc.optimizedSize / doc.originalSize) * 100)}%
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-[10px] text-[#94A3B8] mt-1 font-mono">
+                              {new Date(doc.createdAt).toLocaleDateString()} at {new Date(doc.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center space-x-1.5 shrink-0">
+                          <button
+                            type="button"
+                            onClick={() => openDocumentPreview(doc.originalName || doc.filename, doc._id, doc.originalName, doc.size, doc.documentType)}
+                            className="inline-flex items-center px-2.5 py-1.5 rounded-lg bg-[#3B50DF] hover:bg-[#2E3FB8] text-white text-[11px] font-bold shadow-sm transition active:scale-95"
+                            title="Preview document online"
+                          >
+                            <Eye size={12} className="mr-1" />
+                            <span>View</span>
+                          </button>
+                          <a
+                            href={getDocumentDownloadUrl(doc._id)}
+                            download={doc.originalName || doc.filename}
+                            className="inline-flex items-center px-2 py-1.5 rounded-lg bg-white border border-[#D0D7E5] hover:border-[#3B50DF] hover:bg-[#EEF2FF] text-[#475569] hover:text-[#3B50DF] text-[11px] font-bold transition shadow-sm"
+                            title="Download document file"
+                          >
+                            <Download size={12} />
+                          </a>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Verification Decision Modal */}
@@ -598,6 +1023,32 @@ const AdminStudentView: React.FC = () => {
             <p className="text-xs text-[#6C757D] leading-relaxed">
               Confirming verification status for this submission under <strong className="text-[#1E1E1E]">{reviewRecord.module}</strong>.
             </p>
+
+            {/* Attached Proof Document Preview in Verification Modal */}
+            {(() => {
+              const docAttachment = reviewRecord.record.proofDocument || reviewRecord.record.certificate || reviewRecord.record.certificateFile || reviewRecord.record.offerLetter;
+              if (!docAttachment) return null;
+              const docId = typeof docAttachment === 'object' ? docAttachment._id : docAttachment;
+              const docName = typeof docAttachment === 'object' ? (docAttachment.originalName || docAttachment.filename) : 'Attached Proof Document';
+              return (
+                <div className="p-3 bg-[#EEF2FF] border border-[#D9E1FC] rounded-xl flex items-center justify-between text-xs">
+                  <div className="flex items-center space-x-2 truncate">
+                    <FileText size={14} className="text-[#3B50DF] shrink-0" />
+                    <span className="font-semibold text-[#1E1E1E] truncate">Proof: {docName}</span>
+                  </div>
+                  <div className="flex items-center space-x-1.5 shrink-0 ml-2">
+                    <button
+                      type="button"
+                      onClick={() => openDocumentPreview(`Proof - ${docName}`, docId, docName)}
+                      className="px-2.5 py-1 bg-[#3B50DF] hover:bg-[#2E3FB8] text-white rounded-lg font-bold text-[11px] flex items-center space-x-1 transition shadow-sm"
+                    >
+                      <Eye size={11} />
+                      <span>View Proof</span>
+                    </button>
+                  </div>
+                </div>
+              );
+            })()}
 
             {actionType === 'REJECTED' && (
               <div>
@@ -743,6 +1194,12 @@ const AdminStudentView: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* Online Document Preview Modal */}
+      <DocumentPreviewModal
+        {...previewModal}
+        onClose={() => setPreviewModal((prev) => ({ ...prev, isOpen: false }))}
+      />
     </div>
   );
 };

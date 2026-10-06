@@ -46,6 +46,31 @@ const studentSchema = new mongoose.Schema(
       uppercase: true,
       index: true,
     },
+    normalizedRollNumber: {
+      type: String,
+      trim: true,
+      uppercase: true,
+      index: true,
+    },
+    entryType: {
+      type: String,
+      enum: ['REGULAR', 'LATERAL_ENTRY', 'TRANSFER', 'SPECIAL_ENTRY'],
+      default: 'REGULAR',
+      index: true,
+    },
+    branchCode: {
+      type: String,
+      trim: true,
+      default: '',
+    },
+    graduationYear: {
+      type: Number,
+    },
+    resolutionMode: {
+      type: String,
+      enum: ['AUTOMATIC', 'ASSISTED', 'MANUAL'],
+      default: 'AUTOMATIC',
+    },
     studentId: {
       type: String,
       trim: true,
@@ -263,6 +288,9 @@ const studentSchema = new mongoose.Schema(
 studentSchema.pre('save', function (next) {
   if (!this.studentId && this._id) {
     this.studentId = this._id.toString();
+  }
+  if (this.rollNumber) {
+    this.normalizedRollNumber = this.rollNumber.trim().toUpperCase();
   }
   if (this.semester) {
     this.year = Math.min(Math.max(Math.ceil(this.semester / 2), 1), 4);

@@ -12,6 +12,8 @@ export const protect = catchAsync(async (req: AuthenticatedRequest, res: Respons
 
   if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
     token = req.headers.authorization.split(' ')[1];
+  } else if (req.query && req.query.token) {
+    token = req.query.token as string;
   }
 
   if (!token) {
@@ -43,10 +45,50 @@ export const protect = catchAsync(async (req: AuthenticatedRequest, res: Respons
   next();
 });
 
-// Restrict access to specific roles
+// Optional protect middleware: parses auth token if present without blocking if absent
+export const optionalProtect = catchAsync(async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+  let token = '';
+
+  if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
+    token = req.headers.authorization.split(' ')[1];
+  } else if (req.query && req.query.token) {
+    token = req.query.token as string;
+  }
+
+  if (!token) {
+    return next();
+  }
+
+  try {
+    const decoded: any = verifyToken(token);
+    const currentUser = await User.findById(decoded.id);
+    if (currentUser) {
+      req.user = {
+        id: currentUser._id.toString(),
+        role: currentUser.role as 'student' | 'admin',
+        rollNumber: currentUser.rollNumber || undefined,
+        email: currentUser.email,
+      };
+    }
+  } catch (err) {
+    // If token is invalid or expired, continue as unauthenticated
+  }
+
+  next();
+});
+
+// Restrict access to specific roles (allows 'tpo' whenever 'admin' is authorized)
 export const restrictTo = (...roles: string[]) => {
   return (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
-    if (!req.user || !roles.includes(req.user.role)) {
+    if (!req.user) {
+      return next(new AppError('You are not authorized to perform this action.', 403));
+    }
+    const userRole = req.user.role;
+    const isAllowed = 
+      roles.includes(userRole) || 
+      (roles.includes('admin') && (userRole === 'admin' || (userRole as any) === 'tpo'));
+
+    if (!isAllowed) {
       return next(new AppError('You are not authorized to perform this action.', 403));
     }
     next();

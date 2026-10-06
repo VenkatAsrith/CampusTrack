@@ -5,6 +5,7 @@ import type { Project } from '../types';
 import StatusBadge from '../components/StatusBadge';
 import ConfirmDialog from '../components/ConfirmDialog';
 import FileUploader from '../components/FileUploader';
+import { getDocumentViewUrl } from '../utils/documentUrl';
 
 const Projects: React.FC = () => {
   const [projects, setProjects] = useState<Project[]>([]);
@@ -262,7 +263,7 @@ const Projects: React.FC = () => {
                     )}
                     {p.proofDocument && (
                       <a 
-                        href={`/api/v1/documents/${p.proofDocument._id}`} 
+                        href={getDocumentViewUrl(p.proofDocument._id)} 
                         target="_blank" 
                         rel="noopener noreferrer" 
                         className="text-[#3B50DF] hover:underline flex items-center"

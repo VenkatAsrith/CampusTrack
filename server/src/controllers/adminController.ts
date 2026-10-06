@@ -11,6 +11,7 @@ import { Achievement } from '../models/Achievement';
 import { CodingProfile } from '../models/CodingProfile';
 import { Announcement } from '../models/Announcement';
 import { AuditLog } from '../models/AuditLog';
+import { Document } from '../models/Document';
 import { AppError } from '../utils/errors';
 import { catchAsync } from '../middlewares/error';
 import { AuthenticatedRequest } from '../types/express';
@@ -206,10 +207,20 @@ export const getStudentProfile = catchAsync(async (req: AuthenticatedRequest, re
   const hackathons = await Hackathon.find({ student: studentId }).populate('certificate');
   const achievements = await Achievement.find({ student: studentId }).populate('proofDocument');
 
+  // Fetch all documents uploaded by this student (resumes, certificates, profile photos, proof)
+  const documents = await Document.find({
+    $or: [
+      { student: studentId },
+      { uploadedBy: student.user }
+    ],
+    status: 'active'
+  }).sort({ createdAt: -1 });
+
   res.status(200).json({
     status: 'success',
     data: {
       student,
+      documents,
       codingProfiles,
       projects,
       internships,
@@ -284,6 +295,10 @@ export const getDashboardStats = catchAsync(async (req: AuthenticatedRequest, re
       totalInternships,
       totalCertifications,
       totalHackathons,
+      recentProfileUpdates: await Student.find({})
+        .sort({ updatedAt: -1 })
+        .limit(10)
+        .select('fullName rollNumber branch year semester cgpa profilePhoto resumeLink profileCompletion numberOfBacklogs updatedAt'),
     },
   });
 });

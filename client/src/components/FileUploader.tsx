@@ -1,13 +1,23 @@
 import React, { useState, useRef } from 'react';
-import { Upload, CheckCircle2, AlertCircle, Loader2, Sparkles } from 'lucide-react';
+import { Upload, CheckCircle2, AlertCircle, Loader2, Sparkles, FileText } from 'lucide-react';
 import api from '../services/api';
+
+export type DocumentTypeCategory = 
+  | 'profile_photo' 
+  | 'resume' 
+  | 'certificate' 
+  | 'offer_letter' 
+  | 'proof_document' 
+  | 'other';
 
 interface FileUploaderProps {
   label: string;
-  onUploadSuccess: (documentId: string) => void;
+  onUploadSuccess: (documentId: string, fileData?: any) => void;
   initialFileName?: string;
   error?: string;
   acceptTypes?: string;
+  documentType?: DocumentTypeCategory;
+  maxSizeBytes?: number;
 }
 
 type UploadPhase = 'IDLE' | 'OPTIMIZING' | 'UPLOADING' | 'SUCCESS';
@@ -26,25 +36,64 @@ const formatSize = (bytes: number): string => {
   return `${kb.toFixed(1)} KB`;
 };
 
+const getCategoryDetails = (type: DocumentTypeCategory = 'proof_document') => {
+  switch (type) {
+    case 'profile_photo':
+      return {
+        defaultAccept: '.jpg,.jpeg,.png,.webp',
+        maxSize: 1 * 1024 * 1024,
+        hint: 'JPG, PNG or WEBP up to 1 MB',
+      };
+    case 'resume':
+      return {
+        defaultAccept: '.pdf',
+        maxSize: 3 * 1024 * 1024,
+        hint: 'PDF document up to 3 MB',
+      };
+    case 'certificate':
+      return {
+        defaultAccept: '.pdf,.jpg,.jpeg,.png,.webp',
+        maxSize: 5 * 1024 * 1024,
+        hint: 'PDF, JPG, PNG up to 5 MB',
+      };
+    case 'offer_letter':
+    case 'proof_document':
+    case 'other':
+    default:
+      return {
+        defaultAccept: '.pdf,.jpg,.jpeg,.png,.webp,.doc,.docx',
+        maxSize: 5 * 1024 * 1024,
+        hint: 'PDF, DOCX, JPG, PNG up to 5 MB',
+      };
+  }
+};
+
 const FileUploader: React.FC<FileUploaderProps> = ({ 
   label, 
   onUploadSuccess, 
   initialFileName, 
   error,
-  acceptTypes = ".pdf,.jpg,.jpeg,.png,.webp,.doc,.docx"
+  documentType = 'proof_document',
+  acceptTypes,
+  maxSizeBytes,
 }) => {
+  const categoryConfig = getCategoryDetails(documentType);
+  const effectiveAccept = acceptTypes || categoryConfig.defaultAccept;
+  const effectiveMaxSize = maxSizeBytes || categoryConfig.maxSize;
+
   const [phase, setPhase] = useState<UploadPhase>(initialFileName ? 'SUCCESS' : 'IDLE');
   const [uploadedName, setUploadedName] = useState<string | null>(initialFileName || null);
   const [uploadError, setUploadError] = useState<string | null>(null);
+  const [uploadProgress, setUploadProgress] = useState<number>(0);
   const [stats, setStats] = useState<OptimizationStats | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Client-side image optimization via HTML5 Canvas
+  // Client-side image optimization via HTML5 Canvas (only for images, never destructive on PDFs)
   const optimizeImageFile = async (file: File): Promise<{ file: File; originalSize: number; optimizedSize: number; savedPercent: number }> => {
     const originalSize = file.size;
 
-    // Non-destructive: PDFs, DOC, DOCX or non-images bypass canvas transformation to keep 100% legibility
-    if (!file.type.startsWith('image/')) {
+    // Resumes, PDFs, DOC, DOCX strictly bypass canvas to keep 100% vector typography and searchability
+    if (!file.type.startsWith('image/') || documentType === 'resume') {
       return {
         file,
         originalSize,
@@ -59,7 +108,8 @@ const FileUploader: React.FC<FileUploaderProps> = ({
 
       img.onload = () => {
         URL.revokeObjectURL(objectUrl);
-        const MAX_DIMENSION = 1920; // High-definition document standard
+        // Profile photos: max 800px; certificates: max 1920px
+        const MAX_DIMENSION = documentType === 'profile_photo' ? 800 : 1920;
         let { width, height } = img;
 
         if (width > MAX_DIMENSION || height > MAX_DIMENSION) {
@@ -81,16 +131,14 @@ const FileUploader: React.FC<FileUploaderProps> = ({
           return resolve({ file, originalSize, optimizedSize: originalSize, savedPercent: 0 });
         }
 
-        // Draw image onto canvas
         ctx.fillStyle = '#FFFFFF';
         ctx.fillRect(0, 0, width, height);
         ctx.drawImage(img, 0, 0, width, height);
 
-        // Compress to JPEG with 0.82 quality factor
+        const quality = documentType === 'profile_photo' ? 0.85 : 0.88;
         canvas.toBlob(
           (blob) => {
             if (!blob || blob.size >= originalSize) {
-              // If compressed size is not smaller, retain original file
               return resolve({ file, originalSize, optimizedSize: originalSize, savedPercent: 0 });
             }
 
@@ -111,7 +159,7 @@ const FileUploader: React.FC<FileUploaderProps> = ({
             });
           },
           'image/jpeg',
-          0.82
+          quality
         );
       };
 
@@ -129,24 +177,27 @@ const FileUploader: React.FC<FileUploaderProps> = ({
     
     const rawFile = e.target.files[0];
     
-    // Size check before processing: 10MB limit
-    if (rawFile.size > 10 * 1024 * 1024) {
-      setUploadError('File is too large. Please select a smaller document.');
+    // Size check
+    if (rawFile.size > effectiveMaxSize) {
+      const maxMb = (effectiveMaxSize / (1024 * 1024)).toFixed(0);
+      setUploadError(`File is too large. Maximum allowed size is ${maxMb} MB.`);
       return;
     }
 
     setUploadError(null);
+    setUploadProgress(0);
     setPhase('OPTIMIZING');
 
     try {
-      // 1. Client-side optimization phase
+      // 1. Client-side preparation phase
       const { file: processedFile, originalSize, optimizedSize, savedPercent } = await optimizeImageFile(rawFile);
       setStats({ originalSize, optimizedSize, savedPercent });
 
-      // 2. Upload phase
+      // 2. Upload to Cloudinary backend endpoint
       setPhase('UPLOADING');
       const formData = new FormData();
       formData.append('file', processedFile);
+      formData.append('documentType', documentType);
       formData.append('originalSize', String(originalSize));
       formData.append('optimizedSize', String(optimizedSize));
 
@@ -154,13 +205,19 @@ const FileUploader: React.FC<FileUploaderProps> = ({
         headers: {
           'Content-Type': 'multipart/form-data',
         },
+        onUploadProgress: (progressEvent) => {
+          if (progressEvent.total) {
+            const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+            setUploadProgress(percentCompleted);
+          }
+        },
       });
 
       if (response.data.status === 'success') {
         const documentId = response.data.data.id;
         setUploadedName(processedFile.name);
         setPhase('SUCCESS');
-        onUploadSuccess(documentId);
+        onUploadSuccess(documentId, response.data.data);
       } else {
         throw new Error(response.data.message || 'Failed to upload document.');
       }
@@ -205,26 +262,35 @@ const FileUploader: React.FC<FileUploaderProps> = ({
           ref={fileInputRef}
           onChange={handleFileChange}
           className="hidden"
-          accept={acceptTypes}
+          accept={effectiveAccept}
         />
 
         {phase === 'OPTIMIZING' ? (
           <div className="flex flex-col items-center py-2 text-center">
             <Loader2 className="h-7 w-7 text-[#3B50DF] animate-spin mb-1.5" />
             <span className="text-xs font-bold text-[#1E1E1E]">Optimizing document...</span>
-            <span className="text-[11px] text-[#6C757D] mt-0.5">Compressing resolution & ensuring safe Cloudinary payload</span>
+            <span className="text-[11px] text-[#6C757D] mt-0.5">Compressing for fast institutional Cloudinary delivery</span>
           </div>
         ) : phase === 'UPLOADING' ? (
-          <div className="flex flex-col items-center py-2 text-center">
+          <div className="flex flex-col items-center py-2 text-center w-full max-w-xs">
             <Loader2 className="h-7 w-7 text-[#3B50DF] animate-spin mb-1.5" />
-            <span className="text-xs font-bold text-[#3B50DF]">Uploading...</span>
-            <span className="text-[11px] text-[#6C757D] mt-0.5">Storing securely on encrypted institutional storage</span>
+            <span className="text-xs font-bold text-[#3B50DF]">Uploading to Cloudinary... {uploadProgress}%</span>
+            <div className="w-full bg-[#E2E8F0] h-1.5 rounded-full mt-2 overflow-hidden">
+              <div 
+                className="bg-[#3B50DF] h-full transition-all duration-200 rounded-full"
+                style={{ width: `${uploadProgress}%` }}
+              />
+            </div>
+            <span className="text-[10px] text-[#6C757D] mt-1">Storing securely with AES-256 cloud encryption</span>
           </div>
         ) : phase === 'SUCCESS' && uploadedName ? (
           <div className="flex flex-col items-center py-1.5 text-center">
             <CheckCircle2 className="h-7 w-7 text-emerald-600 mb-1" />
             <span className="text-xs font-bold text-emerald-900">Uploaded successfully</span>
-            <span className="text-xs font-medium text-[#1E1E1E] mt-0.5 line-clamp-1 max-w-sm">{uploadedName}</span>
+            <div className="flex items-center space-x-1 mt-0.5">
+              <FileText size={13} className="text-[#6C757D]" />
+              <span className="text-xs font-medium text-[#1E1E1E] line-clamp-1 max-w-sm">{uploadedName}</span>
+            </div>
             
             {stats && (
               <div className="text-[11px] font-mono text-[#6C757D] mt-1.5 bg-white px-2.5 py-0.5 rounded border border-[#E2E8F0]">
@@ -243,7 +309,7 @@ const FileUploader: React.FC<FileUploaderProps> = ({
           <div className="flex flex-col items-center py-2 text-center">
             <Upload className="h-7 w-7 text-[#3B50DF] mb-1" />
             <span className="text-xs text-[#1E1E1E] font-bold">Select document</span>
-            <span className="text-[11px] text-[#6C757D] mt-0.5">PDF, DOCX, JPG, PNG up to 10MB</span>
+            <span className="text-[11px] text-[#6C757D] mt-0.5">{categoryConfig.hint}</span>
           </div>
         )}
       </div>

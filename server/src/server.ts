@@ -1,6 +1,7 @@
 import app from './app';
 import { connectDB, closeDB } from './config/db';
 import { config } from './config';
+import { isCloudinaryConfigured } from './config/cloudinary';
 import { User } from './models/User';
 import { seedData } from './scripts/seed';
 
@@ -27,6 +28,11 @@ const startServer = async () => {
   const server = app.listen(config.PORT, () => {
     console.log(`🚀 Server running in ${config.NODE_ENV} mode on port ${config.PORT}`);
     console.log(`📡 API endpoint: http://localhost:${config.PORT}/api/v1`);
+    if (isCloudinaryConfigured()) {
+      console.log(`☁️  Cloudinary storage: Connected (Cloud Name: ${(config.CLOUDINARY_CLOUD_NAME || process.env.CLOUDINARY_CLOUD_NAME || '').trim()})`);
+    } else {
+      console.log(`⚠️  Cloudinary storage: Not configured. Set CLOUDINARY_CLOUD_NAME in .env`);
+    }
   });
 
   // Handle unhandled rejections

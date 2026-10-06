@@ -14,4 +14,7 @@ export const config = {
   GOOGLE_SHEETS_SPREADSHEET_ID: process.env.GOOGLE_SHEETS_SPREADSHEET_ID || '1w2T9SHihyIOdKWXCkYYPu7R_U2ZYqB3j4zhrQjXKQBk',
   GOOGLE_SHEETS_SYNC_SECRET: process.env.GOOGLE_SHEETS_SYNC_SECRET || 'campustrack_sync_secret_prod_987654321',
   UPLOAD_DIR: process.env.UPLOAD_DIR || path.join(__dirname, '../../uploads'),
+  CLOUDINARY_CLOUD_NAME: process.env.CLOUDINARY_CLOUD_NAME || '',
+  CLOUDINARY_API_KEY: process.env.CLOUDINARY_API_KEY || '',
+  CLOUDINARY_API_SECRET: process.env.CLOUDINARY_API_SECRET || '',
 };

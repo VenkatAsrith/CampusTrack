@@ -87,11 +87,28 @@ export interface AnnouncementAttachment {
   size?: number;
 }
 
+export interface FormField {
+  id: string;
+  label: string;
+  type: 'TEXT' | 'LONG_TEXT' | 'EMAIL' | 'PHONE' | 'NUMBER' | 'DATE' | 'DROPDOWN' | 'RADIO' | 'CHECKBOX' | 'FILE_UPLOAD' | 'URL' | 'YES_NO' | 'MULTI_SELECT';
+  required: boolean;
+  options?: string[];
+  placeholder?: string;
+  helpText?: string;
+}
+
+export interface ApplicationFormConfig {
+  enabled: boolean;
+  fields: FormField[];
+}
+
 export interface AnnouncementEligibility {
   minCGPA?: number;
   maxBacklogs?: number;
   eligibleBranches?: string[];
+  eligibleBatches?: string[];
   eligibleYears?: number[];
+  eligibleEntryTypes?: string[];
 }
 
 export interface Announcement {
@@ -105,15 +122,41 @@ export interface Announcement {
   isPlacementDrive: boolean;
   companyName?: string;
   jobRole?: string;
+  compensation?: string;
+  location?: string;
   driveDate?: string;
   startDate?: string;
   endDate?: string;
   eligibility?: AnnouncementEligibility;
+  applicationForm?: ApplicationFormConfig;
   isPublished: boolean;
   status: 'UPCOMING' | 'ACTIVE' | 'EXPIRED';
   createdBy?: any;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface PlacementApplication {
+  _id: string;
+  driveId: string | any;
+  studentId: string | any;
+  systemData: {
+    rollNumber: string;
+    name: string;
+    branch: string;
+    batch: string;
+    entryType: string;
+    email: string;
+    phone: string;
+    cgpa: number;
+    backlogs: number;
+    resumeLink?: string;
+  };
+  responses: Record<string, any>;
+  status: 'DRAFT' | 'SUBMITTED' | 'UNDER_REVIEW' | 'SHORTLISTED' | 'REJECTED' | 'SELECTED' | 'WITHDRAWN';
+  submittedAt: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface CodingProfile {

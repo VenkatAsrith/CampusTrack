@@ -13,10 +13,13 @@ import {
   RefreshCw,
   ExternalLink,
   CheckCircle,
-  AlertCircle
+  AlertCircle,
+  FileText,
+  Download
 } from 'lucide-react';
 import api from '../services/api';
 import type { Student } from '../types';
+import { resolveDocumentViewUrl, resolveDocumentDownloadUrl } from '../utils/documentUrl';
 
 interface ColumnDef {
   key: string;
@@ -500,8 +503,24 @@ const AdminDirectory: React.FC = () => {
                       {student.rollNumber}
                     </td>
                     <td className="px-5 py-3.5">
-                      <div className="font-bold text-[#1E1E1E]">{student.fullName}</div>
-                      <div className="text-[10px] text-[#6C757D] font-mono truncate max-w-[150px]">{student.email}</div>
+                      <div className="flex items-center space-x-3">
+                        <div className="h-9 w-9 rounded-full bg-[#EEF2FF] border border-[#D9E1FC] text-[#3B50DF] font-bold text-xs flex items-center justify-center overflow-hidden shrink-0 shadow-sm">
+                          {student.profilePhoto ? (
+                            <img 
+                              src={student.profilePhoto} 
+                              alt={student.fullName} 
+                              className="h-full w-full object-cover" 
+                              onError={(e) => { (e.target as HTMLElement).style.display = 'none'; }} 
+                            />
+                          ) : (
+                            student.fullName.split(' ').map((n: string) => n[0]).join('').substring(0, 2)
+                          )}
+                        </div>
+                        <div className="overflow-hidden">
+                          <div className="font-bold text-[#1E1E1E] truncate max-w-[170px]" title={student.fullName}>{student.fullName}</div>
+                          <div className="text-[10px] text-[#6C757D] font-mono truncate max-w-[150px]">{student.email}</div>
+                        </div>
+                      </div>
                     </td>
                     <td className="px-4 py-3.5">
                       <span className="font-medium text-[#1E1E1E] truncate block max-w-[160px]">
@@ -544,13 +563,35 @@ const AdminDirectory: React.FC = () => {
                         </span>
                       </div>
                     </td>
-                    <td className="px-5 py-3.5 text-right">
+                    <td className="px-5 py-3.5 text-right whitespace-nowrap space-x-1.5">
+                      {student.resumeLink && (
+                        <>
+                          <a
+                            href={resolveDocumentViewUrl(student.resumeLink)}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center px-2.5 py-1.5 rounded-xl bg-white hover:bg-[#EEF2FF] text-[#3B50DF] text-xs font-semibold border border-[#D9E1FC] transition active:scale-95 shadow-sm"
+                            title="Preview Student Resume Online (Browser Viewer)"
+                          >
+                            <FileText size={12} className="mr-1" />
+                            Resume
+                          </a>
+                          <a
+                            href={resolveDocumentDownloadUrl(student.resumeLink)}
+                            download={`${student.rollNumber}_Resume.pdf`}
+                            className="inline-flex items-center p-1.5 rounded-xl bg-white hover:bg-[#EEF2FF] text-[#64748B] hover:text-[#3B50DF] text-xs font-semibold border border-[#E2E8F0] transition active:scale-95 shadow-sm"
+                            title="Download Student Resume"
+                          >
+                            <Download size={12} />
+                          </a>
+                        </>
+                      )}
                       <button
                         onClick={() => navigate(`/admin/students/${student._id}`)}
                         className="inline-flex items-center px-3 py-1.5 rounded-xl bg-[#EEF2FF] hover:bg-[#3B50DF] text-[#3B50DF] hover:text-white text-xs font-semibold border border-[#D9E1FC] transition active:scale-95 shadow-sm"
                       >
                         <Eye size={12} className="mr-1.5" />
-                        Inspect
+                        View Profile
                       </button>
                     </td>
                   </tr>

@@ -18,12 +18,53 @@ const attachmentSchema = new mongoose.Schema(
   { _id: false }
 );
 
+const formFieldSchema = new mongoose.Schema(
+  {
+    id: { type: String, required: true },
+    label: { type: String, required: true, trim: true },
+    type: {
+      type: String,
+      enum: [
+        'TEXT',
+        'LONG_TEXT',
+        'EMAIL',
+        'PHONE',
+        'NUMBER',
+        'DATE',
+        'DROPDOWN',
+        'RADIO',
+        'CHECKBOX',
+        'FILE_UPLOAD',
+        'URL',
+        'YES_NO',
+        'MULTI_SELECT',
+      ],
+      default: 'TEXT',
+    },
+    required: { type: Boolean, default: false },
+    options: { type: [String], default: [] },
+    placeholder: { type: String, default: '' },
+    helpText: { type: String, default: '' },
+  },
+  { _id: false }
+);
+
+const applicationFormSchema = new mongoose.Schema(
+  {
+    enabled: { type: Boolean, default: true },
+    fields: { type: [formFieldSchema], default: [] },
+  },
+  { _id: false }
+);
+
 const eligibilitySchema = new mongoose.Schema(
   {
     minCGPA: { type: Number, min: 0, max: 10, default: 0 },
     maxBacklogs: { type: Number, min: 0, default: 0 },
     eligibleBranches: { type: [String], default: [] },
+    eligibleBatches: { type: [String], default: [] },
     eligibleYears: { type: [Number], default: [] },
+    eligibleEntryTypes: { type: [String], default: [] },
   },
   { _id: false }
 );
@@ -75,6 +116,16 @@ const announcementSchema = new mongoose.Schema(
       trim: true,
       default: '',
     },
+    compensation: {
+      type: String,
+      trim: true,
+      default: '', // e.g. "₹12 LPA" or "₹40,000 / month"
+    },
+    location: {
+      type: String,
+      trim: true,
+      default: '', // e.g. "Hyderabad / Bengaluru"
+    },
     driveDate: {
       type: Date,
     },
@@ -90,6 +141,10 @@ const announcementSchema = new mongoose.Schema(
     eligibility: {
       type: eligibilitySchema,
       default: () => ({}),
+    },
+    applicationForm: {
+      type: applicationFormSchema,
+      default: () => ({ enabled: true, fields: [] }),
     },
     isPublished: {
       type: Boolean,

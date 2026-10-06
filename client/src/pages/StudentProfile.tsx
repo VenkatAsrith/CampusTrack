@@ -13,9 +13,12 @@ import {
   Home,
   Users2,
   Layers,
-  Award
+  Award,
+  Camera,
+  Loader2
 } from 'lucide-react';
 import api from '../services/api';
+import FileUploader from '../components/FileUploader';
 import type { Student, SemesterResult } from '../types';
 
 interface ProfileFormValues {
@@ -56,6 +59,8 @@ const StudentProfile: React.FC = () => {
   const [saving, setSaving] = useState(false);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [photoUploading, setPhotoUploading] = useState(false);
+  const photoInputRef = React.useRef<HTMLInputElement>(null);
   const [activeTab, setActiveTab] = useState<'personal' | 'parent' | 'address' | 'academic' | 'professional'>('personal');
 
   // Semester results state for dynamic semester percentages
@@ -161,6 +166,38 @@ const StudentProfile: React.FC = () => {
     );
   };
 
+  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files || e.target.files.length === 0) return;
+    const file = e.target.files[0];
+    if (file.size > 1 * 1024 * 1024) {
+      setErrorMsg('Profile photo must be 1 MB or smaller.');
+      return;
+    }
+    setPhotoUploading(true);
+    setErrorMsg(null);
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('documentType', 'profile_photo');
+      const res = await api.post('/documents/upload', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+      const photoUrl = res.data.data.url;
+      if (photoUrl) {
+        await api.put('/students/profile', { profilePhoto: photoUrl });
+        setProfile((prev) => (prev ? { ...prev, profilePhoto: photoUrl } : prev));
+        const local = JSON.parse(localStorage.getItem('campustrack_student') || '{}');
+        localStorage.setItem('campustrack_student', JSON.stringify({ ...local, profilePhoto: photoUrl }));
+        setSuccessMsg('Profile photo updated successfully!');
+        setTimeout(() => setSuccessMsg(null), 4000);
+      }
+    } catch (err: any) {
+      setErrorMsg(err.response?.data?.message || 'Failed to upload profile photo to Cloudinary.');
+    } finally {
+      setPhotoUploading(false);
+    }
+  };
+
   const onSubmit = async (values: ProfileFormValues) => {
     setSaving(true);
     setSuccessMsg(null);
@@ -244,8 +281,36 @@ const StudentProfile: React.FC = () => {
         <div className="glow-orb top-0 right-0 w-64 h-64 bg-[#3B50DF]/5" />
         
         <div className="flex items-center space-x-5 relative z-10">
-          <div className="h-16 w-16 bg-[#3B50DF] border border-[#5B6EF5] text-white font-extrabold text-2xl rounded-2xl flex items-center justify-center shadow-md shadow-[#3B50DF]/30">
-            {profile?.fullName.split(' ').map((n) => n[0]).join('').substring(0, 2) || 'ST'}
+          <div className="relative group">
+            <input
+              type="file"
+              ref={photoInputRef}
+              onChange={handlePhotoUpload}
+              accept=".jpg,.jpeg,.png,.webp"
+              className="hidden"
+            />
+            <div 
+              onClick={() => !photoUploading && photoInputRef.current?.click()}
+              className="h-16 w-16 bg-[#3B50DF] border-2 border-white text-white font-extrabold text-2xl rounded-2xl flex items-center justify-center shadow-md shadow-[#3B50DF]/30 overflow-hidden relative cursor-pointer group-hover:opacity-95 transition-all"
+              title="Click to update profile photo"
+            >
+              {photoUploading ? (
+                <Loader2 className="h-6 w-6 animate-spin text-white" />
+              ) : profile?.profilePhoto ? (
+                <img 
+                  src={profile.profilePhoto} 
+                  alt={profile.fullName} 
+                  className="h-full w-full object-cover"
+                />
+              ) : (
+                profile?.fullName.split(' ').map((n) => n[0]).join('').substring(0, 2) || 'ST'
+              )}
+
+              {/* Hover overlay with camera icon */}
+              <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity rounded-2xl">
+                <Camera size={18} className="text-white" />
+              </div>
+            </div>
           </div>
           <div>
             <h1 className="text-xl font-extrabold text-[#1E1E1E] leading-tight">{profile?.fullName}</h1>
@@ -781,18 +846,36 @@ const StudentProfile: React.FC = () => {
                   </div>
                 </div>
 
-                <div>
-                  <label className="block text-xs font-bold text-[#1E1E1E] uppercase tracking-wider mb-2">Google Drive Resume Link</label>
-                  <div className="relative">
-                    <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center text-[#94A3B8]">
-                      <FileText size={18} />
-                    </span>
-                    <input
-                      type="url"
-                      {...register('resumeLink')}
-                      placeholder="https://drive.google.com/file/d/..."
-                      className="block w-full pl-11 pr-4 py-2.5 bg-white border border-[#E2E8F0] rounded-xl text-sm text-[#1E1E1E] focus:outline-none focus:border-[#3B50DF] focus:ring-2 focus:ring-[#3B50DF]/15"
-                    />
+                <div className="space-y-3">
+                  <FileUploader
+                    label="Upload Resume PDF (Cloudinary)"
+                    documentType="resume"
+                    initialFileName={profile?.resumeLink?.includes('cloudinary') || profile?.resumeLink?.includes('/documents/') ? 'Current Resume PDF' : undefined}
+                    onUploadSuccess={(docId, _fileData) => {
+                      const link = `/api/v1/documents/${docId}`;
+                      setValue('resumeLink', link);
+                      setSuccessMsg('Resume PDF uploaded to Cloudinary! Remember to click "Save Profile & Academics".');
+                    }}
+                  />
+
+                  <div>
+                    <label className="block text-xs font-bold text-[#1E1E1E] uppercase tracking-wider mb-1.5">
+                      Resume Link (Cloudinary or Google Drive)
+                    </label>
+                    <div className="relative">
+                      <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center text-[#94A3B8]">
+                        <FileText size={18} />
+                      </span>
+                      <input
+                        type="url"
+                        {...register('resumeLink')}
+                        placeholder="https://... (auto-filled on PDF upload, or paste Google Drive link)"
+                        className="block w-full pl-11 pr-4 py-2.5 bg-white border border-[#E2E8F0] rounded-xl text-sm text-[#1E1E1E] focus:outline-none focus:border-[#3B50DF] focus:ring-2 focus:ring-[#3B50DF]/15"
+                      />
+                    </div>
+                    <p className="text-[11px] text-[#6C757D] mt-1">
+                      Upload your official resume PDF directly to Cloudinary (up to 3 MB), or provide an existing URL.
+                    </p>
                   </div>
                 </div>
               </div>

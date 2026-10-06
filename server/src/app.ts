@@ -22,7 +22,9 @@ import { config } from './config';
 const app = express();
 
 // Security Middlewares
-app.use(helmet());
+app.use(helmet({
+  crossOriginResourcePolicy: { policy: "cross-origin" }
+}));
 
 // Secure CORS configuration
 const allowedOrigins = [

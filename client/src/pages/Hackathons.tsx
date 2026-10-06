@@ -5,6 +5,7 @@ import type { Hackathon } from '../types';
 import StatusBadge from '../components/StatusBadge';
 import ConfirmDialog from '../components/ConfirmDialog';
 import FileUploader from '../components/FileUploader';
+import { getDocumentViewUrl } from '../utils/documentUrl';
 
 const Hackathons: React.FC = () => {
   const [records, setRecords] = useState<Hackathon[]>([]);
@@ -231,7 +232,7 @@ const Hackathons: React.FC = () => {
                       </a>
                     )}
                     {r.certificate && (
-                      <a href={`/api/v1/documents/${r.certificate._id}`} target="_blank" rel="noopener noreferrer" className="text-brand-450 hover:text-brand-350 underline font-semibold">
+                      <a href={getDocumentViewUrl(r.certificate._id)} target="_blank" rel="noopener noreferrer" className="text-brand-450 hover:text-brand-350 underline font-semibold">
                         View Certificate
                       </a>
                     )}
