@@ -31,6 +31,7 @@ import {
 import api from '../services/api';
 import StatCard from '../components/StatCard';
 import { resolveDocumentViewUrl, resolveDocumentDownloadUrl } from '../utils/documentUrl';
+import { CardSkeleton, ChartSkeleton } from '../components/LoadingSkeleton';
 
 // Modern Education palette colors for charts
 const EDU_CHART_COLORS = [
@@ -84,19 +85,25 @@ const AdminDashboard: React.FC = () => {
   useEffect(() => {
     fetchDashboardData(false);
 
-    // Auto-polling interval every 12 seconds so profile changes reflect with immediate effect
+    // Visibility-aware auto-polling (Section 53 & 54): 30 seconds interval, paused when browser tab is inactive
     const interval = setInterval(() => {
-      fetchDashboardData(true);
-    }, 12000);
+      if (document.visibilityState === 'visible') {
+        fetchDashboardData(true);
+      }
+    }, 30000);
 
     return () => clearInterval(interval);
   }, [fetchDashboardData]);
 
   if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-3 select-none">
-        <div className="h-10 w-10 border-4 border-[#3B50DF] border-t-transparent rounded-full animate-spin"></div>
-        <p className="text-[#6C757D] text-sm font-semibold">Loading TPO analytics dashboard...</p>
+      <div className="space-y-6 select-none">
+        <div className="h-10 w-72 bg-slate-200 dark:bg-slate-800 rounded-xl animate-pulse" />
+        <CardSkeleton count={4} />
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <ChartSkeleton />
+          <ChartSkeleton />
+        </div>
       </div>
     );
   }

@@ -172,12 +172,14 @@ export const getStudents = catchAsync(async (req: AuthenticatedRequest, res: Res
     sort.rollNumber = 1;
   }
 
-  const students = await Student.find(query)
-    .sort(sort)
-    .skip(skip)
-    .limit(limitNum);
-
-  const total = await Student.countDocuments(query);
+  const [students, total] = await Promise.all([
+    Student.find(query)
+      .sort(sort)
+      .skip(skip)
+      .limit(limitNum)
+      .lean(),
+    Student.countDocuments(query),
+  ]);
 
   res.status(200).json({
     status: 'success',
@@ -189,7 +191,7 @@ export const getStudents = catchAsync(async (req: AuthenticatedRequest, res: Res
   });
 });
 
-// 3. Get Student Profile View for TPO (Fetches student info + all related tables)
+// 3. Get Student Profile View for TPO (Fetches student info + all related tables in parallel)
 export const getStudentProfile = catchAsync(async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
   const student = await Student.findById(req.params.id);
   if (!student) {
@@ -198,23 +200,32 @@ export const getStudentProfile = catchAsync(async (req: AuthenticatedRequest, re
 
   const studentId = student._id;
 
-  // Fetch all related sub-module records
-  const codingProfiles = await CodingProfile.find({ student: studentId });
-  const projects = await Project.find({ student: studentId }).populate('proofDocument');
-  const internships = await Internship.find({ student: studentId }).populate('certificate').populate('offerLetter');
-  const certifications = await Certification.find({ student: studentId }).populate('certificateFile');
-  const nptel = await NPTELRecord.find({ student: studentId }).populate('certificate');
-  const hackathons = await Hackathon.find({ student: studentId }).populate('certificate');
-  const achievements = await Achievement.find({ student: studentId }).populate('proofDocument');
-
-  // Fetch all documents uploaded by this student (resumes, certificates, profile photos, proof)
-  const documents = await Document.find({
-    $or: [
-      { student: studentId },
-      { uploadedBy: student.user }
-    ],
-    status: 'active'
-  }).sort({ createdAt: -1 });
+  // Fetch all related sub-module records concurrently with .lean() to prevent N+1 query overhead
+  const [
+    codingProfiles,
+    projects,
+    internships,
+    certifications,
+    nptel,
+    hackathons,
+    achievements,
+    documents,
+  ] = await Promise.all([
+    CodingProfile.find({ student: studentId }).lean(),
+    Project.find({ student: studentId }).populate('proofDocument').lean(),
+    Internship.find({ student: studentId }).populate('certificate').populate('offerLetter').lean(),
+    Certification.find({ student: studentId }).populate('certificateFile').lean(),
+    NPTELRecord.find({ student: studentId }).populate('certificate').lean(),
+    Hackathon.find({ student: studentId }).populate('certificate').lean(),
+    Achievement.find({ student: studentId }).populate('proofDocument').lean(),
+    Document.find({
+      $or: [
+        { student: studentId },
+        { uploadedBy: student.user },
+      ],
+      status: 'active',
+    }).sort({ createdAt: -1 }).lean(),
+  ]);
 
   res.status(200).json({
     status: 'success',
@@ -232,49 +243,71 @@ export const getStudentProfile = catchAsync(async (req: AuthenticatedRequest, re
   });
 });
 
-// 4. TPO Dashboard Metrics Summary
+// 4. TPO Dashboard Metrics Summary (Optimized with single parallel dispatch)
 export const getDashboardStats = catchAsync(async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
-  const totalStudents = await Student.countDocuments();
-  const completedProfiles = await Student.countDocuments({ profileCompletion: { $gte: 80 } });
-  const pendingProfiles = totalStudents - completedProfiles;
+  const now = new Date();
+  const modules = [Project, Internship, Certification, NPTELRecord, Hackathon, Achievement];
 
-  // Backlogs & Eligibility Metrics
-  const zeroBacklogsStudents = await Student.countDocuments({ numberOfBacklogs: 0 });
-  const withBacklogsStudents = await Student.countDocuments({ numberOfBacklogs: { $gt: 0 } });
-  const placementEligibleStudents = await Student.countDocuments({ cgpa: { $gte: 7.0 }, numberOfBacklogs: 0 });
-
-  // Average CGPA
-  const cgpaAgg = await Student.aggregate([
-    { $group: { _id: null, avgCgpa: { $avg: '$cgpa' } } },
+  // Execute all metric aggregations concurrently across MongoDB Atlas pool
+  const [
+    totalStudents,
+    completedProfiles,
+    zeroBacklogsStudents,
+    withBacklogsStudents,
+    placementEligibleStudents,
+    cgpaAgg,
+    activeAnnouncementsCount,
+    upcomingDrivesCount,
+    totalProjects,
+    totalInternships,
+    totalCertifications,
+    totalHackathons,
+    recentProfileUpdates,
+    ...verificationCounts
+  ] = await Promise.all([
+    Student.countDocuments(),
+    Student.countDocuments({ profileCompletion: { $gte: 80 } }),
+    Student.countDocuments({ numberOfBacklogs: 0 }),
+    Student.countDocuments({ numberOfBacklogs: { $gt: 0 } }),
+    Student.countDocuments({ cgpa: { $gte: 7.0 }, numberOfBacklogs: 0 }),
+    Student.aggregate([
+      { $group: { _id: null, avgCgpa: { $avg: '$cgpa' } } },
+    ]),
+    Announcement.countDocuments({ isPublished: true }),
+    Announcement.countDocuments({
+      isPublished: true,
+      isPlacementDrive: true,
+      $or: [{ endDate: { $exists: false } }, { endDate: null }, { endDate: { $gte: now } }],
+    }),
+    Project.countDocuments(),
+    Internship.countDocuments(),
+    Certification.countDocuments(),
+    Hackathon.countDocuments(),
+    Student.find({})
+      .sort({ updatedAt: -1 })
+      .limit(10)
+      .select('fullName rollNumber branch year semester cgpa profilePhoto resumeLink profileCompletion numberOfBacklogs updatedAt')
+      .lean(),
+    ...modules.flatMap((Model) => [
+      Model.countDocuments({ 'verification.status': 'SUBMITTED' }),
+      Model.countDocuments({ 'verification.status': 'VERIFIED' }),
+      Model.countDocuments({ 'verification.status': 'REJECTED' }),
+    ]),
   ]);
+
+  const pendingProfiles = totalStudents - completedProfiles;
   const averageCgpa = cgpaAgg.length > 0 ? Number(cgpaAgg[0].avgCgpa.toFixed(2)) : 0;
 
-  // Count pending verification across modules
-  const modules = [Project, Internship, Certification, NPTELRecord, Hackathon, Achievement];
+  // Unpack verification counts
   let awaitingVerification = 0;
-  let verifiedCount = 0;
-  let rejectedCount = 0;
+  let verifiedRecords = 0;
+  let rejectedRecords = 0;
 
-  for (const Model of modules) {
-    awaitingVerification += await Model.countDocuments({ 'verification.status': 'SUBMITTED' });
-    verifiedCount += await Model.countDocuments({ 'verification.status': 'VERIFIED' });
-    rejectedCount += await Model.countDocuments({ 'verification.status': 'REJECTED' });
+  for (let i = 0; i < verificationCounts.length; i += 3) {
+    awaitingVerification += verificationCounts[i];
+    verifiedRecords += verificationCounts[i + 1];
+    rejectedRecords += verificationCounts[i + 2];
   }
-
-  // Announcements & Drives
-  const activeAnnouncementsCount = await Announcement.countDocuments({ isPublished: true });
-  const now = new Date();
-  const upcomingDrivesCount = await Announcement.countDocuments({
-    isPublished: true,
-    isPlacementDrive: true,
-    $or: [{ endDate: { $exists: false } }, { endDate: null }, { endDate: { $gte: now } }],
-  });
-
-  // Module counts
-  const totalProjects = await Project.countDocuments();
-  const totalInternships = await Internship.countDocuments();
-  const totalCertifications = await Certification.countDocuments();
-  const totalHackathons = await Hackathon.countDocuments();
 
   res.status(200).json({
     status: 'success',
@@ -283,8 +316,8 @@ export const getDashboardStats = catchAsync(async (req: AuthenticatedRequest, re
       completedProfiles,
       pendingProfiles,
       awaitingVerification,
-      verifiedRecords: verifiedCount,
-      rejectedRecords: rejectedCount,
+      verifiedRecords,
+      rejectedRecords,
       zeroBacklogsStudents,
       withBacklogsStudents,
       placementEligibleStudents,
@@ -295,10 +328,7 @@ export const getDashboardStats = catchAsync(async (req: AuthenticatedRequest, re
       totalInternships,
       totalCertifications,
       totalHackathons,
-      recentProfileUpdates: await Student.find({})
-        .sort({ updatedAt: -1 })
-        .limit(10)
-        .select('fullName rollNumber branch year semester cgpa profilePhoto resumeLink profileCompletion numberOfBacklogs updatedAt'),
+      recentProfileUpdates,
     },
   });
 });

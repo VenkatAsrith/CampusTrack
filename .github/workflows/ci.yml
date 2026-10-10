@@ -1,0 +1,162 @@
+name: CampusTrack Continuous Integration (CI)
+
+on:
+  push:
+    branches:
+      - main
+      - master
+      - dev
+      - 'release/**'
+  pull_request:
+    branches:
+      - main
+      - master
+      - dev
+  workflow_dispatch:
+
+# Cancel any redundant in-progress runs for the same branch/PR
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # =========================================================================
+  # 1. CLIENT CI: LINT, TYPECHECK & PRODUCTION BUNDLE
+  # =========================================================================
+  client-ci:
+    name: Client (Vite + React + TS + Tailwind)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./client
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+          cache-dependency-path: './client/package-lock.json'
+
+      - name: Install Client Dependencies
+        run: npm ci
+
+      - name: Run Code Linter (oxlint)
+        run: npm run lint
+
+      - name: Compile TypeScript & Vite Production Bundle
+        run: npm run build
+
+      - name: Verify Dist Artifact
+        run: |
+          if [ ! -f "dist/index.html" ]; then
+            echo "❌ Error: Production build failed - dist/index.html not found!"
+            exit 1
+          fi
+          echo "✅ Client bundle created successfully."
+
+  # =========================================================================
+  # 2. SERVER CI: COMPILE & RESILIENCE SUITE
+  # =========================================================================
+  server-ci:
+    name: Server (Node.js + Express + TypeScript + MongoDB)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./server
+
+    services:
+      mongodb:
+        image: mongo:6.0
+        ports:
+          - 27017:27017
+        options: >-
+          --health-cmd mongosh
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+          cache-dependency-path: './server/package-lock.json'
+
+      - name: Install Server Dependencies
+        run: npm ci
+
+      - name: Compile TypeScript
+        run: npm run build
+
+      - name: Run Production Resilience & DB Index Validation Suite
+        env:
+          NODE_ENV: test
+          PORT: 5055
+          MONGODB_URI: mongodb://localhost:27017/campustrack_ci_test
+          JWT_SECRET: ci_jwt_super_secret_test_key_123456789
+          CLIENT_URL: http://localhost:5173
+        run: node dist/scripts/verifyResilience.js
+
+  # =========================================================================
+  # 3. END-TO-END AUTOMATED SMOKE LOAD TEST
+  # =========================================================================
+  smoke-load-test:
+    name: End-to-End API Smoke Load Test
+    needs: [client-ci, server-ci]
+    runs-on: ubuntu-latest
+
+    services:
+      mongodb:
+        image: mongo:6.0
+        ports:
+          - 27017:27017
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+          cache-dependency-path: './server/package-lock.json'
+
+      - name: Install Server Dependencies
+        working-directory: ./server
+        run: npm ci
+
+      - name: Build Server
+        working-directory: ./server
+        run: npm run build
+
+      - name: Start Server in Background
+        env:
+          NODE_ENV: test
+          PORT: 5000
+          MONGODB_URI: mongodb://localhost:27017/campustrack_ci_smoke
+          JWT_SECRET: ci_jwt_super_secret_test_key_123456789
+          CLIENT_URL: http://localhost:5173
+          RATE_LIMIT_GLOBAL_MAX: 10000
+        run: |
+          node server/dist/server.js &
+          echo "Waiting for CampusTrack API to initialize..."
+          for i in {1..30}; do
+            if curl -s -f http://localhost:5000/api/v1/health > /dev/null; then
+              echo "✅ API is up and healthy!"
+              break
+            fi
+            sleep 1
+          done
+
+      - name: Run Automated High-Concurrency Smoke Test
+        run: |
+          node load-tests/run-node-load-test.mjs --url=http://localhost:5000 --rps=25 --duration=10

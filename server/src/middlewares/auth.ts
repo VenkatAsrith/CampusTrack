@@ -42,6 +42,11 @@ export const protect = catchAsync(async (req: AuthenticatedRequest, res: Respons
     email: currentUser.email,
   };
 
+  // Enforce zero caching on all authenticated private data (Section 7)
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, private');
+  res.setHeader('Pragma', 'no-cache');
+  res.setHeader('Expires', '0');
+
   next();
 });
 

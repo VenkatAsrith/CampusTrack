@@ -48,4 +48,7 @@ const achievementSchema = new mongoose.Schema(
   }
 );
 
+// High-speed compound index for student record alerts and verification queries
+achievementSchema.index({ student: 1, 'verification.status': 1 });
+
 export const Achievement = mongoose.model('Achievement', achievementSchema);

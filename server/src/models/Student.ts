@@ -321,6 +321,8 @@ studentSchema.index({ branch: 1, year: 1, rollNumber: 1 });
 studentSchema.index({ branch: 1, year: 1, cgpa: -1 });
 studentSchema.index({ year: 1, semester: 1 });
 studentSchema.index({ placementStatus: 1, year: 1 });
+studentSchema.index({ profileCompletion: -1 });
+studentSchema.index({ updatedAt: -1 });
 
 export const Student = mongoose.model('Student', studentSchema);
 

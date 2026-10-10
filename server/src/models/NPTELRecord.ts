@@ -56,4 +56,7 @@ const nptelRecordSchema = new mongoose.Schema(
   }
 );
 
+// High-speed compound index for student record alerts and verification queries
+nptelRecordSchema.index({ student: 1, 'verification.status': 1 });
+
 export const NPTELRecord = mongoose.model('NPTELRecord', nptelRecordSchema);

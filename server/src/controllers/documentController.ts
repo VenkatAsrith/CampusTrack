@@ -200,9 +200,19 @@ export const serveFile = catchAsync(async (req: AuthenticatedRequest, res: Respo
     contentType = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
   }
 
-  // 4. Cloudinary Storage Delivery: stream inline for preview or as attachment for download
-  const targetUrl = document.cloudinarySecureUrl || document.cloudinaryUrl;
+  // 4. Cloudinary Storage Delivery: Offload directly to CDN (Section 10 & 23: Zero Node.js bandwidth consumption)
+  let targetUrl = document.cloudinarySecureUrl || document.cloudinaryUrl;
   if (targetUrl) {
+    // Responsive image optimization: Support dynamic thumbnails for avatars & previews (Section 25)
+    if (document.mimeType?.startsWith('image/') || isProfilePhoto) {
+      const isThumbnail = req.query.thumb === 'true' || req.query.size === 'thumb';
+      if (isThumbnail && targetUrl.includes('/upload/')) {
+        targetUrl = targetUrl.replace('/upload/', '/upload/c_thumb,w_240,h_240,g_face,q_auto,f_auto/');
+      } else if (targetUrl.includes('/upload/')) {
+        targetUrl = targetUrl.replace('/upload/', '/upload/q_auto,f_auto/');
+      }
+    }
+
     if (req.headers.accept?.includes('application/json')) {
       return res.status(200).json({ 
         status: 'success', 
@@ -214,23 +224,8 @@ export const serveFile = catchAsync(async (req: AuthenticatedRequest, res: Respo
       });
     }
 
-    try {
-      const https = await import('https');
-      https.get(targetUrl, (cloudRes) => {
-        if (cloudRes.statusCode && cloudRes.statusCode >= 400) {
-          // If direct raw fetch encounters any issue, fallback to redirect
-          return res.redirect(targetUrl);
-        }
-        res.setHeader('Content-Type', contentType);
-        res.setHeader('Content-Disposition', `${disposition}; filename="${cleanFilename}"`);
-        cloudRes.pipe(res);
-      }).on('error', () => {
-        res.redirect(targetUrl);
-      });
-      return;
-    } catch (streamErr) {
-      return res.redirect(targetUrl);
-    }
+    // Direct CDN Redirect: Client browser streams directly from Cloudinary Edge CDN
+    return res.redirect(302, targetUrl);
   }
 
   // Backward compatibility fallback: Local disk storage

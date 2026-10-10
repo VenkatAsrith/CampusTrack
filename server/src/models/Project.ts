@@ -70,4 +70,7 @@ const projectSchema = new mongoose.Schema(
   }
 );
 
+// High-speed compound index for student record alerts and verification queries
+projectSchema.index({ student: 1, 'verification.status': 1 });
+
 export const Project = mongoose.model('Project', projectSchema);

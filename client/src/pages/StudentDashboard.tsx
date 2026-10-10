@@ -18,6 +18,7 @@ import api from '../services/api';
 import StatCard from '../components/StatCard';
 import StatusBadge from '../components/StatusBadge';
 import type { Announcement } from '../types';
+import { CardSkeleton, ProfileSkeleton } from '../components/LoadingSkeleton';
 
 const StudentDashboard: React.FC = () => {
   const navigate = useNavigate();
@@ -45,9 +46,9 @@ const StudentDashboard: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-3">
-        <div className="h-10 w-10 border-4 border-[#3B50DF] border-t-transparent rounded-full animate-spin"></div>
-        <p className="text-[#6C757D] text-sm font-semibold">Loading student dashboard...</p>
+      <div className="space-y-6 select-none">
+        <ProfileSkeleton />
+        <CardSkeleton count={4} />
       </div>
     );
   }

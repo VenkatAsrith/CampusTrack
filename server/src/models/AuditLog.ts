@@ -35,4 +35,8 @@ const auditLogSchema = new mongoose.Schema(
   }
 );
 
+// High-speed indices for audit trail retrieval
+auditLogSchema.index({ createdAt: -1 });
+auditLogSchema.index({ user: 1, createdAt: -1 });
+
 export const AuditLog = mongoose.model('AuditLog', auditLogSchema);

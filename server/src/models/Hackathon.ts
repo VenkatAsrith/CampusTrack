@@ -63,4 +63,7 @@ const hackathonSchema = new mongoose.Schema(
   }
 );
 
+// High-speed compound index for student record alerts and verification queries
+hackathonSchema.index({ student: 1, 'verification.status': 1 });
+
 export const Hackathon = mongoose.model('Hackathon', hackathonSchema);

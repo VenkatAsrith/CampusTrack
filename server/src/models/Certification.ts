@@ -53,4 +53,7 @@ const certificationSchema = new mongoose.Schema(
   }
 );
 
+// High-speed compound index for student record alerts and verification queries
+certificationSchema.index({ student: 1, 'verification.status': 1 });
+
 export const Certification = mongoose.model('Certification', certificationSchema);

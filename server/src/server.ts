@@ -4,41 +4,44 @@ import { config } from './config';
 import { isCloudinaryConfigured } from './config/cloudinary';
 import { User } from './models/User';
 import { seedData } from './scripts/seed';
+import { logger } from './utils/logger';
 
-// Handle uncaught exceptions
-process.on('uncaughtException', (err) => {
-  console.error('UNCAUGHT EXCEPTION! 💥 Shutting down...');
-  console.error(err.name, err.message);
-  console.error(err.stack);
+// Handle uncaught exceptions (Section 8: Never crash without logging)
+process.on('uncaughtException', (err: Error) => {
+  logger.error('CRITICAL UNCAUGHT EXCEPTION 💥 Initiating emergency shutdown...', err);
   process.exit(1);
 });
 
 const startServer = async () => {
-  // Connect to DB
+  // Connect to persistent MongoDB connection pool (Section 35)
   await connectDB();
 
   // Auto seed if empty or if requested student profile is missing
-  const userCount = await User.countDocuments();
-  const demo23SS = await User.findOne({ rollNumber: '23SS1A0535' });
-  if (userCount === 0 || !demo23SS) {
-    console.log('🌱 Database needs initialization. Running auto-seeding with student 23SS1A0535 & demo profiles...');
-    await seedData();
+  try {
+    const userCount = await User.countDocuments();
+    const demo23SS = await User.findOne({ rollNumber: '23SS1A0535' });
+    if (userCount === 0 || !demo23SS) {
+      console.log('🌱 Database needs initialization. Running auto-seeding with student 23SS1A0535 & demo profiles...');
+      await seedData();
+    }
+  } catch (seedErr) {
+    logger.error('Database initialization check encountered an error:', seedErr);
   }
 
   const server = app.listen(config.PORT, () => {
-    console.log(`🚀 Server running in ${config.NODE_ENV} mode on port ${config.PORT}`);
-    console.log(`📡 API endpoint: http://localhost:${config.PORT}/api/v1`);
+    logger.info(`🚀 Server running in ${config.NODE_ENV} mode on port ${config.PORT}`);
+    logger.info(`📡 API endpoint: http://localhost:${config.PORT}/api/v1`);
+    logger.info(`💚 Health checks: http://localhost:${config.PORT}/health and /ready`);
     if (isCloudinaryConfigured()) {
-      console.log(`☁️  Cloudinary storage: Connected (Cloud Name: ${(config.CLOUDINARY_CLOUD_NAME || process.env.CLOUDINARY_CLOUD_NAME || '').trim()})`);
+      logger.info(`☁️ Cloudinary storage: Connected (Cloud Name: ${(config.CLOUDINARY_CLOUD_NAME || process.env.CLOUDINARY_CLOUD_NAME || '').trim()})`);
     } else {
-      console.log(`⚠️  Cloudinary storage: Not configured. Set CLOUDINARY_CLOUD_NAME in .env`);
+      logger.warn(`⚠️ Cloudinary storage: Not configured. Set CLOUDINARY_CLOUD_NAME in .env`);
     }
   });
 
-  // Handle unhandled rejections
+  // Handle unhandled promise rejections (Section 34)
   process.on('unhandledRejection', (err: any) => {
-    console.error('UNHANDLED REJECTION! 💥 Shutting down gracefully...');
-    console.error(err.name, err.message);
+    logger.error('UNHANDLED REJECTION 💥 Closing server gracefully...', err);
     server.close(() => {
       closeDB().then(() => {
         process.exit(1);
@@ -46,19 +49,35 @@ const startServer = async () => {
     });
   });
 
-  // Handle termination signals
-  const shutdown = () => {
-    console.log('👋 SIGTERM/SIGINT received. Shutting down gracefully...');
-    server.close(() => {
-      closeDB().then(() => {
-        console.log('💥 Process terminated.');
+  // Graceful Shutdown for OCI VM, Docker, Load Balancer drain (Section 34)
+  let isShuttingDown = false;
+  const gracefulShutdown = (signal: string) => {
+    if (isShuttingDown) return;
+    isShuttingDown = true;
+    logger.info(`👋 ${signal} signal received. Draining existing requests and shutting down gracefully...`);
+
+    // Force exit if connections do not close within 10 seconds
+    const forceExitTimer = setTimeout(() => {
+      logger.error('⚠️ Graceful shutdown timed out after 10s. Forcing exit.');
+      process.exit(1);
+    }, 10000);
+    forceExitTimer.unref();
+
+    server.close(async () => {
+      logger.info('🔒 HTTP server closed: No longer accepting new connections.');
+      try {
+        await closeDB();
+        logger.info('✅ Database pool closed cleanly. Process terminating.');
         process.exit(0);
-      });
+      } catch (dbErr) {
+        logger.error('Error during database pool closing:', dbErr);
+        process.exit(1);
+      }
     });
   };
 
-  process.on('SIGTERM', shutdown);
-  process.on('SIGINT', shutdown);
+  process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+  process.on('SIGINT', () => gracefulShutdown('SIGINT'));
 };
 
 startServer();

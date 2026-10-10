@@ -175,96 +175,107 @@ export const getDashboardSummary = catchAsync(async (req: AuthenticatedRequest, 
 
   const studentId = student._id.toString();
 
-  // 1. Fetch counts
-  const codingCount = await CodingProfile.countDocuments({ student: studentId });
-  const projectCount = await Project.countDocuments({ student: studentId });
-  const internshipCount = await Internship.countDocuments({ student: studentId });
-  const certCount = await Certification.countDocuments({ student: studentId });
-  const nptelCount = await NPTELRecord.countDocuments({ student: studentId });
-  const hackCount = await Hackathon.countDocuments({ student: studentId });
-  const achCount = await Achievement.countDocuments({ student: studentId });
+  // Execute all metric counts, profile completion, and alerts in parallel
+  const [
+    codingCount,
+    projectCount,
+    internshipCount,
+    certCount,
+    nptelCount,
+    hackCount,
+    achCount,
+    completionInfo,
+    badProjects,
+    badInterns,
+    badCerts,
+    badNptel,
+    badHacks,
+    badAchs,
+  ] = await Promise.all([
+    CodingProfile.countDocuments({ student: studentId }),
+    Project.countDocuments({ student: studentId }),
+    Internship.countDocuments({ student: studentId }),
+    Certification.countDocuments({ student: studentId }),
+    NPTELRecord.countDocuments({ student: studentId }),
+    Hackathon.countDocuments({ student: studentId }),
+    Achievement.countDocuments({ student: studentId }),
+    (async () => {
+      const { calculateProfileCompletion } = require('../utils/profileCompletion');
+      return calculateProfileCompletion(studentId);
+    })(),
+    Project.find({ student: studentId, 'verification.status': { $in: ['SUBMITTED', 'UNDER_REVIEW', 'REJECTED'] } }).lean(),
+    Internship.find({ student: studentId, 'verification.status': { $in: ['SUBMITTED', 'UNDER_REVIEW', 'REJECTED'] } }).lean(),
+    Certification.find({ student: studentId, 'verification.status': { $in: ['SUBMITTED', 'UNDER_REVIEW', 'REJECTED'] } }).lean(),
+    NPTELRecord.find({ student: studentId, 'verification.status': { $in: ['SUBMITTED', 'UNDER_REVIEW', 'REJECTED'] } }).lean(),
+    Hackathon.find({ student: studentId, 'verification.status': { $in: ['SUBMITTED', 'UNDER_REVIEW', 'REJECTED'] } }).lean(),
+    Achievement.find({ student: studentId, 'verification.status': { $in: ['SUBMITTED', 'UNDER_REVIEW', 'REJECTED'] } }).lean(),
+  ]);
 
-  // 2. Fetch completion breakdown
-  const { calculateProfileCompletion } = require('../utils/profileCompletion');
-  const completionInfo = await calculateProfileCompletion(studentId);
-
-  // 3. Gather alerts (Pending or Rejected items)
+  // Gather alerts (Pending or Rejected items)
   const alerts: any[] = [];
 
-  // Project alerts
-  const badProjects = await Project.find({ student: studentId, 'verification.status': { $in: ['SUBMITTED', 'UNDER_REVIEW', 'REJECTED'] } });
   badProjects.forEach((p: any) => {
     alerts.push({
       id: p._id,
       module: 'Projects',
       name: p.projectName,
-      status: p.verification.status,
-      reason: p.verification.rejectionReason,
+      status: p.verification?.status,
+      reason: p.verification?.rejectionReason,
       updatedAt: p.updatedAt,
     });
   });
 
-  // Internship alerts
-  const badInterns = await Internship.find({ student: studentId, 'verification.status': { $in: ['SUBMITTED', 'UNDER_REVIEW', 'REJECTED'] } });
   badInterns.forEach((i: any) => {
     alerts.push({
       id: i._id,
       module: 'Internships',
       name: `${i.company} (${i.role})`,
-      status: i.verification.status,
-      reason: i.verification.rejectionReason,
+      status: i.verification?.status,
+      reason: i.verification?.rejectionReason,
       updatedAt: i.updatedAt,
     });
   });
 
-  // Certification alerts
-  const badCerts = await Certification.find({ student: studentId, 'verification.status': { $in: ['SUBMITTED', 'UNDER_REVIEW', 'REJECTED'] } });
   badCerts.forEach((c: any) => {
     alerts.push({
       id: c._id,
       module: 'Certifications',
       name: c.certificationName,
-      status: c.verification.status,
-      reason: c.verification.rejectionReason,
+      status: c.verification?.status,
+      reason: c.verification?.rejectionReason,
       updatedAt: c.updatedAt,
     });
   });
 
-  // NPTEL alerts
-  const badNptel = await NPTELRecord.find({ student: studentId, 'verification.status': { $in: ['SUBMITTED', 'UNDER_REVIEW', 'REJECTED'] } });
   badNptel.forEach((n: any) => {
     alerts.push({
       id: n._id,
       module: 'NPTEL Courses',
       name: n.courseName,
-      status: n.verification.status,
-      reason: n.verification.rejectionReason,
+      status: n.verification?.status,
+      reason: n.verification?.rejectionReason,
       updatedAt: n.updatedAt,
     });
   });
 
-  // Hackathon alerts
-  const badHacks = await Hackathon.find({ student: studentId, 'verification.status': { $in: ['SUBMITTED', 'UNDER_REVIEW', 'REJECTED'] } });
   badHacks.forEach((h: any) => {
     alerts.push({
       id: h._id,
       module: 'Hackathons',
       name: h.hackathonName,
-      status: h.verification.status,
-      reason: h.verification.rejectionReason,
+      status: h.verification?.status,
+      reason: h.verification?.rejectionReason,
       updatedAt: h.updatedAt,
     });
   });
 
-  // Achievement alerts
-  const badAchs = await Achievement.find({ student: studentId, 'verification.status': { $in: ['SUBMITTED', 'UNDER_REVIEW', 'REJECTED'] } });
   badAchs.forEach((a: any) => {
     alerts.push({
       id: a._id,
       module: 'Achievements',
       name: a.achievementTitle,
-      status: a.verification.status,
-      reason: a.verification.rejectionReason,
+      status: a.verification?.status,
+      reason: a.verification?.rejectionReason,
       updatedAt: a.updatedAt,
     });
   });

@@ -59,4 +59,7 @@ const internshipSchema = new mongoose.Schema(
   }
 );
 
+// High-speed compound index for student record alerts and verification queries
+internshipSchema.index({ student: 1, 'verification.status': 1 });
+
 export const Internship = mongoose.model('Internship', internshipSchema);

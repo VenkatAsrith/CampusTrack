@@ -15,6 +15,7 @@ import {
 import api from '../services/api';
 import type { Student } from '../types';
 import { resolveDocumentViewUrl, resolveDocumentDownloadUrl } from '../utils/documentUrl';
+import EmptyState from '../components/EmptyState';
 
 interface ColumnDef {
   key: string;
@@ -75,6 +76,7 @@ const AdminDirectory: React.FC = () => {
 
   // Filter states
   const [search, setSearch] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
   const [branch, setBranch] = useState('');
   const [year, setYear] = useState('');
   const [batch, setBatch] = useState('');
@@ -82,6 +84,15 @@ const AdminDirectory: React.FC = () => {
   const [minCgpa, setMinCgpa] = useState('');
   const [sortBy, setSortBy] = useState('rollNumber');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
+
+  // Debounce search keystrokes by 350ms (Section 22)
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(search);
+      setPage(1);
+    }, 350);
+    return () => clearTimeout(timer);
+  }, [search]);
   
   // Pagination
   const [page, setPage] = useState(1);
@@ -129,7 +140,7 @@ const AdminDirectory: React.FC = () => {
     try {
       const res = await api.get('/admin/students', {
         params: {
-          search: search || undefined,
+          search: debouncedSearch || undefined,
           branch: branch || undefined,
           year: year || undefined,
           batch: batch || undefined,
@@ -153,7 +164,7 @@ const AdminDirectory: React.FC = () => {
 
   useEffect(() => {
     fetchStudents();
-  }, [search, branch, year, backlogs, minCgpa, sortBy, sortOrder, page, limit]);
+  }, [debouncedSearch, branch, year, backlogs, minCgpa, sortBy, sortOrder, page, limit]);
 
   const handleDownloadExcel = async () => {
     setExporting(true);
@@ -430,8 +441,22 @@ const AdminDirectory: React.FC = () => {
                 </tr>
               ) : students.length === 0 ? (
                 <tr>
-                  <td colSpan={10} className="px-6 py-12 text-center text-[#6C757D] text-xs">
-                    No student records match your query filters.
+                  <td colSpan={10} className="p-8">
+                    <EmptyState
+                      icon={Search}
+                      title="No Student Records Found"
+                      description="There are no students matching your selected search query, branch, or CGPA filters."
+                      actionText="Reset Filters"
+                      onAction={() => {
+                        setSearch('');
+                        setBranch('');
+                        setYear('');
+                        setBacklogs('');
+                        setMinCgpa('');
+                        setBatch('');
+                        setPage(1);
+                      }}
+                    />
                   </td>
                 </tr>
               ) : (
